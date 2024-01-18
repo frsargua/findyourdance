@@ -6,4 +6,4 @@ async function bootstrap() {
   await app.listen(process.env.PORT || 4000);
 }
 bootstrap();
-connsole.log('hello world 4');
+console.log('This should cause a linting error if single quotes are enforced.');
