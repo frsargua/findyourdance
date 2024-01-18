@@ -4,9 +4,28 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "pnpm run --parallel dev"
+    "dev": "pnpm run --parallel dev",
+    "prepare": "husky install",
+    "lint": "eslint . --fix",
+    "pre-commit": "lerna run --concurrency 1 --stream pre-commit"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run lint"
+    }
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": "eslint --cache --fix"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^8.56.0",
+    "husky": "^8.0.0",
+    "lerna": "^8.0.2",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.0.0"
+  },
+  "dependencies": {}
 }
