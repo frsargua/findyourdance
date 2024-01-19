@@ -9,6 +9,7 @@ import { HTTP_PORT } from './constants/config.constants';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: './apps/auth/.env',
       validationSchema: Joi.object({
         [HTTP_PORT]: Joi.number().required(),
       }),
