@@ -6,7 +6,7 @@ import {
   Repository,
 } from 'typeorm';
 import { Logger } from '@nestjs/common';
-import { BaseInterfaceRepository } from './base.interfaces';
+import { BaseInterfaceRepository } from '../interfaces/base.interfaces';
 
 interface HasId {
   id: string;
