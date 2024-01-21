@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
+import { AuthController } from '../controllers/auth.controller';
+import { AuthService } from '../services/auth.service';
 import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
-import { HTTP_PORT } from './constants/config.constants';
-import { UsersModule } from './users/users.module';
+import { HTTP_PORT } from '../constants/config.constants';
+import { UsersModule } from './users.module';
 
 @Module({
   imports: [
