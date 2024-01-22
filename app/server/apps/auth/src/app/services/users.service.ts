@@ -14,9 +14,6 @@ export class UsersService {
 
   async create(createUserDto: CreateUserDto) {
     await this.validateCreateUserDto(createUserDto);
-
-    console.log('creating');
-
     const user = this.usersRepository.create({
       ...createUserDto,
       password: await bcrypt.hash(createUserDto.password, 10),
@@ -48,6 +45,6 @@ export class UsersService {
   }
 
   async getUser(getUserDto: GetUserDto) {
-    return this.usersRepository.findOneById({ where: { getUserDto } });
+    return this.usersRepository.findOneById(getUserDto.id);
   }
 }
