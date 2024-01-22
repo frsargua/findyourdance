@@ -10,5 +10,6 @@ import { DatabaseModule } from '@app/common';
   imports: [DatabaseModule, TypeOrmModule.forFeature([User])],
   controllers: [UsersController],
   providers: [UsersService, UsersRepository],
+  exports: [UsersService],
 })
 export class UsersModule {}
