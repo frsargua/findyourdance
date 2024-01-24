@@ -28,4 +28,10 @@ export class AuthService {
     response.cookie('Authentication', token, { httpOnly: true, expires });
     return token;
   }
+
+  async logout(response: Response) {
+    const result = response.clearCookie('Authentication');
+    console.log(result);
+    return { message: 'You have been logged out successfully.' };
+  }
 }
