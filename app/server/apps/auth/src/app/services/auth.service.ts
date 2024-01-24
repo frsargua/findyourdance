@@ -30,8 +30,7 @@ export class AuthService {
   }
 
   async logout(response: Response) {
-    const result = response.clearCookie('Authentication');
-    console.log(result);
+    response.clearCookie('Authentication');
     return { message: 'You have been logged out successfully.' };
   }
 }
