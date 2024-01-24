@@ -77,6 +77,10 @@
       "json",
       "ts"
     ],
+    "moduleNameMapper": {
+      "^@app/common$": "<rootDir>/libs/common/src",
+      "^@app/common/(.*)$": "<rootDir>/libs/common/src$1"
+    },
     "rootDir": ".",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
