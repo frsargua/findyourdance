@@ -1,6 +1,7 @@
 import { Body, Controller, Post, Res } from '@nestjs/common';
 import { QrCodeGeneratorService } from '../services/qr-code-generator.service';
 import { Response } from 'express';
+import { CreateQrcode } from '../dto/create-qrcode.dto';
 
 @Controller('generate/code/')
 export class QrCodeGeneratorController {
@@ -9,19 +10,26 @@ export class QrCodeGeneratorController {
   ) {}
 
   @Post('qrcode')
-  async generateQrCode(@Body('uuid') uuid: string, @Res() response: Response) {
-    const qrCodeImage = await this.qrCodeGeneratorService.createQRcode(uuid);
+  async generateQrCode(
+    @Body('uuid') code: CreateQrcode,
+    @Res() response: Response
+  ) {
+    const qrCodeImage = await this.qrCodeGeneratorService.createQRcode(
+      code.uuid
+    );
     response.setHeader('Content-Type', 'image/svg');
-    console.log(qrCodeImage);
     response.send(qrCodeImage);
   }
 
   @Post('barcode')
-  async generateBarcode(@Body('uuid') uuid: string, @Res() response: Response) {
-    const barcodeImage = await this.qrCodeGeneratorService.createBarcode(uuid);
+  async generateBarcode(
+    @Body('uuid') code: CreateQrcode,
+    @Res() response: Response
+  ) {
+    const barcodeImage = await this.qrCodeGeneratorService.createBarcode(
+      code.uuid
+    );
     response.setHeader('Content-Type', 'image/svg');
-    console.log(barcodeImage);
-
     response.send(barcodeImage);
   }
 }
