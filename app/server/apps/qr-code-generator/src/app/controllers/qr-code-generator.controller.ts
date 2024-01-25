@@ -10,10 +10,7 @@ export class QrCodeGeneratorController {
   ) {}
 
   @Post('qrcode')
-  async generateQrCode(
-    @Body('uuid') code: CreateQrcode,
-    @Res() response: Response
-  ) {
+  async generateQrCode(@Body() code: CreateQrcode, @Res() response: Response) {
     const qrCodeImage = await this.qrCodeGeneratorService.createQRcode(
       code.uuid
     );
@@ -22,12 +19,9 @@ export class QrCodeGeneratorController {
   }
 
   @Post('barcode')
-  async generateBarcode(
-    @Body('uuid') code: CreateQrcode,
-    @Res() response: Response
-  ) {
+  async generateBarcode(@Body() uuid: CreateQrcode, @Res() response: Response) {
     const barcodeImage = await this.qrCodeGeneratorService.createBarcode(
-      code.uuid
+      uuid.uuid
     );
     response.setHeader('Content-Type', 'image/svg');
     response.send(barcodeImage);

@@ -1,6 +1,6 @@
 import { IsUUID } from 'class-validator';
 
 export class CreateQrcode {
-  @IsUUID()
+  @IsUUID('all', { each: true })
   uuid: string;
 }
