@@ -50,6 +50,9 @@ importers:
       bcryptjs:
         specifier: ^2.4.3
         version: 2.4.3
+      bwip-js:
+        specifier: ^4.2.0
+        version: 4.2.0
       class-transformer:
         specifier: ^0.5.1
         version: 0.5.1
@@ -3127,6 +3130,11 @@ packages:
     engines: {node: '>=10.16.0'}
     dependencies:
       streamsearch: 1.1.0
+
+  /bwip-js@4.2.0:
+    resolution: {integrity: sha512-ensRRvLYdcAmg+zEUJ8a704XGjmbWXmCjSPw8Fwo/cF6GwGDrT0nv+P6M59OHelzRH5WRli+AbFTcP5rRV7WdQ==}
+    hasBin: true
+    dev: false
 
   /byte-size@8.1.1:
     resolution: {integrity: sha512-tUkzZWK0M/qdoLEqikxBWe4kumyuwjl3HO6zHTr4yEI23EojPtLYXdG1+AQY7MN0cGyNDvEaJ8wiYQm6P2bPxg==}
