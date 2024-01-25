@@ -8,15 +8,33 @@
     "tsConfigPath": "apps/auth/tsconfig.app.json"
   },
   "monorepo": true,
-  "root": "apps/auth/src/app",
+  "root": "apps/auth",
   "projects": {
+    "common": {
+      "type": "library",
+      "root": "libs/common",
+      "entryFile": "index",
+      "sourceRoot": "libs/common/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/common/tsconfig.lib.json"
+      }
+    },
     "auth": {
       "type": "application",
-      "root": "apps/auth/src/app",
+      "root": "apps/auth",
       "entryFile": "main",
       "sourceRoot": "apps/auth/src/app",
       "compilerOptions": {
         "tsConfigPath": "apps/auth/tsconfig.app.json"
+      }
+    },
+    "qr-code-generator": {
+      "type": "application",
+      "root": "apps/qr-code-generator",
+      "entryFile": "main",
+      "sourceRoot": "apps/qr-code-generator/src/app",
+      "compilerOptions": {
+        "tsConfigPath": "apps/qr-code-generator/tsconfig.app.json"
       }
     }
   }
