@@ -30,6 +30,7 @@
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/typeorm": "^10.0.1",
     "bcryptjs": "^2.4.3",
+    "bwip-js": "^4.2.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "cookie-parser": "^1.4.6",
@@ -38,6 +39,7 @@
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
     "pg": "^8.11.3",
+    "qrcode": "^1.5.3",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
     "typeorm": "^0.3.19"
@@ -54,6 +56,7 @@
     "@types/passport-jwt": "^4.0.0",
     "@types/passport-local": "^1.0.38",
     "@types/pg": "^8.10.9",
+    "@types/qrcode": "^1.5.5",
     "@types/supertest": "^2.0.12",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
@@ -64,7 +67,7 @@
     "prettier": "^3.0.0",
     "source-map-support": "^0.5.21",
     "supertest": "^6.3.3",
-    "ts-jest": "^29.1.0",
+    "ts-jest": "^29.1.2",
     "ts-loader": "^9.4.3",
     "ts-node": "^10.9.1",
     "tsconfig-paths": "^4.2.0",
@@ -77,6 +80,7 @@
       "json",
       "ts"
     ],
+    "preset": "ts-jest",
     "moduleNameMapper": {
       "^@app/common$": "<rootDir>/libs/common/src",
       "^@app/common/(.*)$": "<rootDir>/libs/common/src$1"
@@ -89,6 +93,7 @@
     "collectCoverageFrom": [
       "**/*.(t|j)s"
     ],
+    "^.+\\.tsx?$": "<rootDir>/node_modules/ts-jest/preprocessor.js",
     "coverageDirectory": "./coverage",
     "testEnvironment": "node",
     "roots": [
