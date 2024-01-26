@@ -4,9 +4,11 @@ import { QrCodeGeneratorService } from '../services/qr-code-generator.service';
 import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
 import { HTTP_PORT } from '../constants/config.constants';
+import { LoggerModule } from '@app/common';
 
 @Module({
   imports: [
+    LoggerModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: './apps/qr-code-generator/.env',
