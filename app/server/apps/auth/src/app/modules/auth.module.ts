@@ -12,9 +12,11 @@ import { UsersModule } from './users.module';
 import { JwtModule } from '@nestjs/jwt';
 import { LocalStategy } from '../strategies/local.strategy';
 import { JwtStrategy } from '../strategies/jwt.strategy';
+import { LoggerModule } from '@app/common';
 
 @Module({
   imports: [
+    LoggerModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: './apps/auth/.env',
