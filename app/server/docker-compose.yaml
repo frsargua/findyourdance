@@ -12,6 +12,19 @@ services:
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
+  qr-code-generator:
+    build:
+      context: .
+      dockerfile: ./apps/qr-code-generator/Dockerfile
+      target: development
+    command: pnpm run start:dev qr-code-generator
+    env_file:
+      - ./apps/qr-code-generator/.env
+    ports:
+      - '3001:3001'
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
   postgres-database:
     container_name: postgres-database
     image: postgres:latest

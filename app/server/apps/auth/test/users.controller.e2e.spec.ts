@@ -2,9 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UsersController } from '../src/app/controllers/users.controller';
 import { UsersService } from '../src/app/services/users.service';
 import { CreateUserDto } from '../src/app/dto/create-user.dt';
-import { User } from '../src/app/model/users.entity';
 import { randomUUID } from 'crypto';
 import { BadRequestException, ValidationPipe } from '@nestjs/common';
+import { User } from '@app/common';
 
 describe('UsersController Tests', () => {
   let controller: UsersController;

@@ -4,7 +4,7 @@ import { CreateUserDto } from '../src/app/dto/create-user.dt';
 import { UsersRepository } from '../src/app/repository/users.repository';
 import * as bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
-import { User } from '../src/app/model/users.entity';
+import { User } from '@app/common';
 
 describe('UsersService', () => {
   let service: UsersService;
