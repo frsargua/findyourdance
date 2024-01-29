@@ -14,7 +14,17 @@ export class AddressApiController {
     const addresses =
       await this.addressApiService.retrieveAddressByPostcode(postcode);
     response.setHeader('Content-Type', 'application/json');
-    console.log(addresses);
+    response.send(addresses);
+  }
+
+  @Post('single/address')
+  async retrieveSingleAddress(
+    @Body('uuid') uuid: string,
+    @Res() response: Response
+  ) {
+    console.log(uuid);
+    const addresses = await this.addressApiService.retrieveSingleAddress(uuid);
+    response.setHeader('Content-Type', 'application/json');
     response.send(addresses);
   }
 }
