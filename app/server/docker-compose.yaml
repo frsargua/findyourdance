@@ -25,6 +25,19 @@ services:
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
+  address.api:
+    build:
+      context: .
+      dockerfile: ./apps/address.api/Dockerfile
+      target: development
+    command: pnpm run start:dev address.api
+    env_file:
+      - ./apps/address.api/.env
+    ports:
+      - '3002:3002'
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
   postgres-database:
     container_name: postgres-database
     image: postgres:latest
