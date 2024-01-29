@@ -1,5 +1,5 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { Address } from '../types/apitier.types';
@@ -20,10 +20,16 @@ export class AddressApiService {
 
     try {
       const response = await firstValueFrom(this.httpService.get(url));
-      return response.data.result.addresses;
+
+      return response.data.result.addresses.map((address: Address) => {
+        return this.handleAddressResponse(address);
+      });
     } catch (error) {
-      console.error('Error fetching data:', error);
-      throw error;
+      console.error('Error fetching data:' + url, error);
+      throw new HttpException(
+        'Failed to fetch addresses',
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
     }
   }
 
@@ -35,7 +41,10 @@ export class AddressApiService {
       return this.handleAddressResponse(response.data.result);
     } catch (error) {
       console.error('Error fetching data:', error);
-      throw error;
+      throw new HttpException(
+        'Failed to fetch address',
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
     }
   }
 
@@ -50,8 +59,8 @@ export class AddressApiService {
       uniqueDeliveryPointRef: response.udprn,
       fullAddress: response.address,
       postCode: response.postcode_compact,
-      latitude: response.geocode.lattitude,
-      longitude: response.geocode.longitude,
+      latitude: response?.geocode?.lattitude ?? '',
+      longitude: response?.geocode?.longitude ?? '',
     };
   }
 
