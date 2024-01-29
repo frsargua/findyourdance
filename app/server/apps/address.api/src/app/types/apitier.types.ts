@@ -1,0 +1,36 @@
+export type Address = {
+  building_number: string;
+  premise: string;
+  building_name: string;
+  sub_building_name: string;
+  organisation_name: string;
+  line_1: string;
+  line_2: string;
+  line_3: string;
+  postcode: string;
+  thoroughfare: string;
+  post_town: string;
+  po_box: string;
+  ward: string;
+  district: string;
+  county: string;
+  country: string;
+  udprn: string;
+  address: string;
+  postcode_incode: string;
+  postcode_outcode: string;
+  postcode_compact: string;
+  postcode_type: string;
+  department_name: string;
+  su_organisation_indicator: string;
+  double_dependant_locality: string;
+  dependant_thoroughfare: string;
+  dependant_locality: string;
+  delivery_point_suffix: string;
+  geocode: {
+    eastings: string;
+    northings: string;
+    lattitude: string;
+    longitude: string;
+  };
+};

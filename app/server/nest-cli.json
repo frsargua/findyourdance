@@ -35,6 +35,15 @@
       "compilerOptions": {
         "tsConfigPath": "apps/qr-code-generator/tsconfig.app.json"
       }
+    },
+    "address.api": {
+      "type": "application",
+      "root": "apps/address.api",
+      "entryFile": "main",
+      "sourceRoot": "apps/address.api/src/app",
+      "compilerOptions": {
+        "tsConfigPath": "apps/address.api/tsconfig.app.json"
+      }
     }
   }
 }
