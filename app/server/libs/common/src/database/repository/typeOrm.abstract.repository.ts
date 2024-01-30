@@ -84,6 +84,14 @@ export abstract class BaseAbstractRepostitory<T extends HasId>
     );
   }
 
+  public async queryWithQueryBuilder(
+    queryCallback: (queryBuilder: any) => any
+  ): Promise<T[]> {
+    const queryBuilder = this.entity.createQueryBuilder();
+    queryCallback(queryBuilder);
+    return queryBuilder.getMany();
+  }
+
   private async handleNotFound(
     document: T | null | undefined,
     errorMessage: string,

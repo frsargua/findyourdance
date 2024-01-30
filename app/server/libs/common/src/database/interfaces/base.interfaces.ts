@@ -12,4 +12,7 @@ export interface BaseInterfaceRepository<T> {
   findWithRelations(relations: FindManyOptions<T>): Promise<T[]>;
   preload(entityLike: DeepPartial<T>): Promise<T>;
   findOne(options: FindOneOptions<T>): Promise<T>;
+  queryWithQueryBuilder(
+    queryCallback: (queryBuilder: any) => any
+  ): Promise<T[]>;
 }

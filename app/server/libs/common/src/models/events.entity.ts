@@ -13,5 +13,5 @@ export class Event extends AbstractEntity {
   end_date_time: Date;
 
   @Column()
-  description: Date;
+  description: string;
 }
