@@ -8,6 +8,8 @@ import { CreateUserDto } from '../dto/create-user.dt';
 import { UsersRepository } from '../repository/users.repository';
 import { GetUserDto } from '../dto/get-user.dto';
 import { AddressUserService } from './address-user.service';
+import { GenericAddressDto } from '../dto/create-address.dto';
+import { User } from '@app/common';
 
 @Injectable()
 export class UsersService {
@@ -17,15 +19,10 @@ export class UsersService {
   ) {}
 
   async create(createUserDto: CreateUserDto) {
-    const address = await this.addressService.createAddress(
-      createUserDto.address
-    );
-
     await this.validateCreateUserDto(createUserDto);
     const user = this.usersRepository.create({
       ...createUserDto,
       password: await bcrypt.hash(createUserDto.password, 10),
-      userAddress: address,
     });
 
     return this.usersRepository.save(user);
@@ -40,6 +37,13 @@ export class UsersService {
       return;
     }
     throw new UnprocessableEntityException('Email already exits');
+  }
+
+  async updateUserAddress(user: User, userAddress: GenericAddressDto) {
+    const address = await this.addressService.createAddress(userAddress);
+    const userFromDb = await this.usersRepository.findOneById(user.id);
+    userFromDb.userAddress = address;
+    return await this.usersRepository.save(userFromDb);
   }
 
   async verifyUser(email: string, password: string) {

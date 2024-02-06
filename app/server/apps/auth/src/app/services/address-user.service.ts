@@ -11,7 +11,6 @@ export class AddressUserService {
     const addressFromDb = await this.getAddress(addressDto);
 
     if (addressFromDb) {
-      console.log('repeated');
       return addressFromDb;
     }
 
