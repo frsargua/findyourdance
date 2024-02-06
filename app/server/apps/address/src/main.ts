@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { AddressModule } from './app/modules/address.module';
+import { AddressModule } from '../../address.api/src/app/modules/address.module';
 import { ConfigService } from '@nestjs/config';
 import { Logger } from 'nestjs-pino';
 import { ValidationPipe } from '@nestjs/common';

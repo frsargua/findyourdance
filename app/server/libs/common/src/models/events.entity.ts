@@ -1,5 +1,5 @@
-import { AbstractEntity } from '@app/common';
-import { Column, Entity } from 'typeorm';
+import { AbstractEntity, AddressEvent } from '@app/common';
+import { Column, Entity, ManyToOne } from 'typeorm';
 
 @Entity({ name: 'events' })
 export class Event extends AbstractEntity {
@@ -14,4 +14,7 @@ export class Event extends AbstractEntity {
 
   @Column()
   description: string;
+
+  @ManyToOne(() => AddressEvent, (address) => address.events)
+  eventAddress: AddressEvent;
 }

@@ -18,4 +18,9 @@ export class UsersController {
   async createUser(@Body() createUserDto: CreateUserDto) {
     return await this.usersService.create(createUserDto);
   }
+
+  @Post()
+  async updateUserAddress(@Body() createUserDto: CreateUserDto) {
+    return await this.usersService.create(createUserDto);
+  }
 }

@@ -1,5 +1,5 @@
-import { AbstractEntity } from '@app/common';
-import { Column, Entity } from 'typeorm';
+import { AbstractEntity, AddressUser } from '@app/common';
+import { Column, Entity, ManyToOne } from 'typeorm';
 
 @Entity({ name: 'users' })
 export class User extends AbstractEntity {
@@ -8,4 +8,7 @@ export class User extends AbstractEntity {
 
   @Column()
   password: string;
+
+  @ManyToOne(() => AddressUser, (address) => address.users)
+  userAddress: AddressUser;
 }

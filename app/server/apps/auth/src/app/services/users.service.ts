@@ -7,16 +7,25 @@ import * as bcrypt from 'bcryptjs';
 import { CreateUserDto } from '../dto/create-user.dt';
 import { UsersRepository } from '../repository/users.repository';
 import { GetUserDto } from '../dto/get-user.dto';
+import { AddressUserService } from './address-user.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly usersRepository: UsersRepository) {}
+  constructor(
+    private readonly usersRepository: UsersRepository,
+    private readonly addressService: AddressUserService
+  ) {}
 
   async create(createUserDto: CreateUserDto) {
+    const address = await this.addressService.createAddress(
+      createUserDto.address
+    );
+
     await this.validateCreateUserDto(createUserDto);
     const user = this.usersRepository.create({
       ...createUserDto,
       password: await bcrypt.hash(createUserDto.password, 10),
+      userAddress: address,
     });
 
     return this.usersRepository.save(user);

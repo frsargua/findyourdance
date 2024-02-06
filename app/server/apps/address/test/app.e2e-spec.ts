@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { AddressModule } from '../src/app/modules/address.module';
+import { AddressModule } from '../../address.api/src/app/modules/address.module';
 
 describe('AddressController (e2e)', () => {
   let app: INestApplication;
