@@ -12,7 +12,7 @@ import { CreateEventDto } from '../dto/create-event.dto';
 import { UpdateEventDto } from '../dto/update-event.dto';
 import { SearchEventDto } from '../dto/search-event.dto copy';
 
-@Controller()
+@Controller('events')
 export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 
@@ -27,8 +27,13 @@ export class EventsController {
   //   return this.eventsService.getHello();
   // }
 
+  @Get(':id/with-address')
+  getEventWithAddress(@Param('id') id: string) {
+    return this.eventsService.getSingleEvent(id, { enableRelationship: true });
+  }
+
   @Get(':id')
-  getSingleEvent(@Param('id') id: string) {
+  getEvent(@Param('id') id: string) {
     return this.eventsService.getSingleEvent(id);
   }
 

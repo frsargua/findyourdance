@@ -4,6 +4,7 @@ import {
   IsNotEmpty,
   Length,
 } from 'class-validator';
+import { CreateAddressDto } from './address.dto';
 
 export class CreateEventDto {
   @IsAlphanumeric()
@@ -19,4 +20,7 @@ export class CreateEventDto {
 
   @IsAlphanumeric()
   description: string;
+
+  @IsNotEmpty()
+  eventAddress: CreateAddressDto;
 }

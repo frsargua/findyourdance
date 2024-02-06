@@ -7,8 +7,9 @@ import { Repository } from 'typeorm';
 export class EventsRepository extends BaseAbstractRepostitory<Event> {
   protected logger: Logger = new Logger(EventsRepository.name);
   constructor(
-    @InjectRepository(Event) private readonly userRepository: Repository<Event>
+    @InjectRepository(Event)
+    private readonly eventsRepository: Repository<Event>
   ) {
-    super(userRepository);
+    super(eventsRepository);
   }
 }

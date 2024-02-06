@@ -12,6 +12,11 @@ interface HasId {
   id: string;
 }
 
+interface MyFindOptions<T> extends FindOneOptions<T> {
+  where: FindOptionsWhere<T>;
+  relations?: string[];
+}
+
 export abstract class BaseAbstractRepostitory<T extends HasId>
   implements BaseInterfaceRepository<T>
 {
@@ -37,12 +42,14 @@ export abstract class BaseAbstractRepostitory<T extends HasId>
     return this.entity.create(data);
   }
 
-  public async findOneById(id: any): Promise<T> {
-    const options: FindOptionsWhere<T> = {
-      id: id,
+  public async findOneById(id: any, relations: string[] = []): Promise<T> {
+    const options: MyFindOptions<T> = {
+      where: { id: id },
+      relations: relations,
     };
+
     return this.handleNotFound(
-      await this.entity.findOneBy(options),
+      await this.entity.findOne(options),
       'Document was not found',
       options
     );
