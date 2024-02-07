@@ -37,9 +37,11 @@ export class EventsController {
     return this.eventsService.getSingleEvent(id);
   }
 
-  @Put()
+  @Put(':id')
   async updateSingleEvent(@Body() createEventDto: UpdateEventDto) {
-    return await this.eventsService.updateSingleEvent(createEventDto);
+    return await this.eventsService.updateSingleEvent(createEventDto, {
+      enableRelationship: true,
+    });
   }
 
   @Delete()

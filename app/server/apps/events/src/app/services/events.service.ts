@@ -31,11 +31,30 @@ export class EventsService {
     return await this.eventsRepository.findOneById(id, relations);
   }
 
-  async updateSingleEvent({ id, ...updateProps }: UpdateEventDto) {
-    const eventToUpdate = await this.eventsRepository.findOneById(id);
+  async updateSingleEvent(
+    { id, eventAddress, ...updateProps }: UpdateEventDto,
+    options?: GetSingleEventOptions
+  ) {
+    const relations = options?.enableRelationship ? ['eventAddress'] : [];
+    const eventToUpdate = await this.eventsRepository.findOneById(
+      id,
+      relations
+    );
+
     if (!eventToUpdate) throw new Error('Event not found');
 
     Object.assign(eventToUpdate, updateProps);
+
+    if (
+      eventAddress &&
+      eventToUpdate.eventAddress.uniqueDeliveryPointRef !==
+        eventAddress.uniqueDeliveryPointRef
+    ) {
+      const updatedAddress =
+        await this.addressService.createAddress(eventAddress);
+      eventToUpdate.eventAddress = updatedAddress;
+    }
+
     return this.eventsRepository.save(eventToUpdate);
   }
 
