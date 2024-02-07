@@ -6,11 +6,13 @@ import {
   Param,
   Post,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { EventsService } from '../services/events.service';
 import { CreateEventDto } from '../dto/create-event.dto';
 import { UpdateEventDto } from '../dto/update-event.dto';
 import { SearchEventDto } from '../dto/search-event.dto copy';
+import { CurrentUser, JwtAuthGuard } from '@app/common';
 
 @Controller('events')
 export class EventsController {
@@ -27,8 +29,10 @@ export class EventsController {
   //   return this.eventsService.getHello();
   // }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':id/with-address')
-  getEventWithAddress(@Param('id') id: string) {
+  async getEventWithAddress(@Param('id') id: string, @CurrentUser() user: any) {
+    console.log('user: ' + (await user));
     return this.eventsService.getSingleEvent(id, { enableRelationship: true });
   }
 

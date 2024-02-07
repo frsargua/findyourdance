@@ -7,6 +7,7 @@ import {
   HTTP_PORT,
   JWT_EXPIRATION,
   JWT_SECRET,
+  TCP_PORT,
 } from '../constants/config.constants';
 import { UsersModule } from './users.module';
 import { JwtModule } from '@nestjs/jwt';
@@ -24,6 +25,7 @@ import { LoggerModule } from '@app/common';
         [JWT_SECRET]: Joi.string().required(),
         [JWT_EXPIRATION]: Joi.string().required(),
         [HTTP_PORT]: Joi.number().required(),
+        [TCP_PORT]: Joi.number().required(),
       }),
     }),
     JwtModule.registerAsync({
