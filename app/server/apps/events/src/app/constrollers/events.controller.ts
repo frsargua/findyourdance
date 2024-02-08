@@ -13,6 +13,7 @@ import { CreateEventDto } from '../dto/create-event.dto';
 import { UpdateEventDto } from '../dto/update-event.dto';
 import { SearchEventDto } from '../dto/search-event.dto copy';
 import { CurrentUser, JwtAuthGuard } from '@app/common';
+import { Coordinates } from '../types/events.Controller.types';
 
 @Controller('events')
 export class EventsController {
@@ -38,6 +39,11 @@ export class EventsController {
   @Get(':id/with-address')
   async getEventWithAddress(@Param('id') id: string) {
     return this.eventsService.getSingleEvent(id, { enableRelationship: true });
+  }
+
+  @Get('/within/coordinates')
+  async getEventsWithinCoordinates(@Body() coordinates: Coordinates) {
+    return this.eventsService.getEventWithinCoordinates(coordinates);
   }
 
   @Get(':id')

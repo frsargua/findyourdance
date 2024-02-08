@@ -31,4 +31,12 @@ export class GenericAddress extends AbstractEntity {
 
   @Column('double precision')
   longitude: number;
+
+  @Column({
+    type: 'geography',
+    spatialFeatureType: 'Point',
+    srid: 4326,
+    nullable: true,
+  })
+  location: string;
 }

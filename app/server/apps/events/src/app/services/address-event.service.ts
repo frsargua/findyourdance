@@ -13,8 +13,25 @@ export class AddressEventService {
     if (addressFromDb) {
       return addressFromDb;
     }
+    const { latitude, longitude, ...rest } = addressDto;
+    const newAddress = this.addressRepository.create({
+      ...rest,
+      latitude,
+      longitude,
+    });
+    const savedAddress = await this.addressRepository.save(newAddress);
+    await this.addressRepository.updateLocation(
+      savedAddress.id,
+      latitude,
+      longitude
+    );
+    const updatedAddress = await this.addressRepository.findOne({
+      where: { id: savedAddress.id },
+    });
 
-    return this.addressRepository.save(addressDto);
+    const newSavedAddress = await this.addressRepository.save(updatedAddress);
+
+    return newSavedAddress;
   }
 
   async getAddress(addressDto: CreateAddressDto) {

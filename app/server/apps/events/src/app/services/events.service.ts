@@ -41,6 +41,15 @@ export class EventsService {
     });
   }
 
+  async getEventWithinCoordinates(user: any, options?: GetSingleEventOptions) {
+    const relations = options?.enableRelationship ? ['eventAddress'] : [];
+
+    return await this.eventsRepository.findAll({
+      where: { user: user.id },
+      relations: relations,
+    });
+  }
+
   async updateSingleEvent(
     { id, eventAddress, ...updateProps }: UpdateEventDto,
     options?: GetSingleEventOptions

@@ -53,7 +53,10 @@ services:
       - /usr/src/app/node_modules
   postgres-database:
     container_name: postgres-database
-    image: postgres:latest
+    # build:
+    #   context: .
+    #   dockerfile: ./libs/common/src/database/Dockerfile.postgres
+    image: postgis/postgis:latest
     environment:
       POSTGRES_DB: findyourdance
       POSTGRES_USER: postgres
