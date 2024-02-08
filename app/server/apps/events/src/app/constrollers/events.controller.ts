@@ -18,21 +18,25 @@ import { CurrentUser, JwtAuthGuard } from '@app/common';
 export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
-  async createEvent(@Body() createEventDto: CreateEventDto) {
-    return await this.eventsService.create(createEventDto);
+  async createEvent(
+    @Body() createEventDto: CreateEventDto,
+    @CurrentUser() user: any
+  ) {
+    return await this.eventsService.create(createEventDto, user);
   }
 
-  // Add JWT auth to get user ID
-  // @Get()
-  // getUserEvents(): string {
-  //   return this.eventsService.getHello();
-  // }
-
   @UseGuards(JwtAuthGuard)
+  @Get()
+  async getUserEvents(@CurrentUser() user: any) {
+    return await this.eventsService.getUserEvents(user, {
+      enableRelationship: true,
+    });
+  }
+
   @Get(':id/with-address')
-  async getEventWithAddress(@Param('id') id: string, @CurrentUser() user: any) {
-    console.log('user: ' + (await user));
+  async getEventWithAddress(@Param('id') id: string) {
     return this.eventsService.getSingleEvent(id, { enableRelationship: true });
   }
 
@@ -53,11 +57,11 @@ export class EventsController {
     return await this.eventsService.deleteSingleEvent(id);
   }
 
-  // Add JWT auth to get user ID
-  // @Delete()
-  // deleteAllEvents(@Param('id') id: string): string {
-  //   return this.eventsService.getHello(id);
-  // }
+  @UseGuards(JwtAuthGuard)
+  @Delete()
+  deleteAllEvents(@CurrentUser() user: any) {
+    return this.eventsService.deleteUserEvents(user);
+  }
 
   @Get('search')
   async search(@Body() searchOptions: SearchEventDto) {

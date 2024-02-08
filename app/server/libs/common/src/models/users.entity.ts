@@ -1,7 +1,7 @@
 import { AbstractEntity, AddressUser } from '@app/common';
 import { Column, Entity, ManyToOne } from 'typeorm';
 
-@Entity({ name: 'users' })
+@Entity()
 export class User extends AbstractEntity {
   @Column()
   email: string;

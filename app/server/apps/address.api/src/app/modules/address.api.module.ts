@@ -6,8 +6,6 @@ import { HTTP_PORT } from '../constants/config.constants';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
-import { AddressController } from '../../../../auth/src/app/controllers/address-user.controller';
-import { GenericAddressService } from '../services/address.service';
 
 @Module({
   imports: [
@@ -22,7 +20,7 @@ import { GenericAddressService } from '../services/address.service';
       }),
     }),
   ],
-  controllers: [AddressApiController, AddressController],
-  providers: [AddressApiService, GenericAddressService],
+  controllers: [AddressApiController],
+  providers: [AddressApiService],
 })
 export class AddressApiModule {}

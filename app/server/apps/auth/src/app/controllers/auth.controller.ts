@@ -39,7 +39,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @MessagePattern('authenticate')
   async authenticate(@CurrentUser() user: any, @Payload() data: any) {
-    console.log('Current user: ' + data.user);
+    console.log('Current user: ' + JSON.stringify(data.user));
     return user;
   }
 }

@@ -17,11 +17,12 @@ export class EventsService {
     private readonly addressService: AddressEventService
   ) {}
 
-  async create({ eventAddress, ...createEventDto }: CreateEventDto) {
+  async create({ eventAddress, ...createEventDto }: CreateEventDto, user: any) {
     const address = await this.addressService.createAddress(eventAddress);
     const event = await this.eventsRepository.create({
       ...createEventDto,
       eventAddress: address,
+      user: user.id,
     });
     return this.eventsRepository.save(event);
   }
@@ -29,6 +30,15 @@ export class EventsService {
   async getSingleEvent(id: string, options?: GetSingleEventOptions) {
     const relations = options?.enableRelationship ? ['eventAddress'] : [];
     return await this.eventsRepository.findOneById(id, relations);
+  }
+
+  async getUserEvents(user: any, options?: GetSingleEventOptions) {
+    const relations = options?.enableRelationship ? ['eventAddress'] : [];
+
+    return await this.eventsRepository.findAll({
+      where: { user: user.id },
+      relations: relations,
+    });
   }
 
   async updateSingleEvent(
@@ -61,6 +71,14 @@ export class EventsService {
   async deleteSingleEvent(id: string) {
     const eventToDelete = await this.eventsRepository.findOneById(id);
     return await this.eventsRepository.remove(eventToDelete);
+  }
+
+  async deleteUserEvents(user: any) {
+    const deletedResults = await this.eventsRepository.deleteAllEventsByUserId(
+      user.id
+    );
+
+    return deletedResults;
   }
 
   async searchEvents(searchEventsDto: SearchEventDto): Promise<Event[]> {

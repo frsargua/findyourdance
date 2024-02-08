@@ -1,7 +1,6 @@
-import { Entity, Column } from 'typeorm';
+import { Column } from 'typeorm';
 import { AbstractEntity } from '../database';
 
-@Entity()
 export class GenericAddress extends AbstractEntity {
   @Column({ nullable: true })
   buildingNumber: string;

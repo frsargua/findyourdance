@@ -75,6 +75,10 @@ export abstract class BaseAbstractRepostitory<T extends HasId>
     return await this.entity.remove(data);
   }
 
+  public async removeAll(data: T): Promise<T> {
+    return await this.entity.remove(data);
+  }
+
   public async preload(entityLike: DeepPartial<T>): Promise<T> {
     return this.handleNotFound(
       await this.entity.preload(entityLike),
@@ -89,6 +93,10 @@ export abstract class BaseAbstractRepostitory<T extends HasId>
       'Document was not found',
       options
     );
+  }
+
+  public async getEntity() {
+    return this.entity;
   }
 
   public async queryWithQueryBuilder(
