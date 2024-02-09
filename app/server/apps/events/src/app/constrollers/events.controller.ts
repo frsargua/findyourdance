@@ -53,8 +53,14 @@ export class EventsController {
   }
 
   @Get('search/coordinates')
-  async findWithinCoordinates(@Query() coordinates: CoordinatesDto) {
-    return this.eventsService.getEventWithinCoordinates(coordinates);
+  async findWithinCoordinates(
+    @Query() coordinates: CoordinatesDto,
+    @Query('radius') radius: number
+  ) {
+    return this.eventsService.getEventWithinCoordinates(
+      coordinates,
+      radius * 1000
+    );
   }
 
   @Put(':id')

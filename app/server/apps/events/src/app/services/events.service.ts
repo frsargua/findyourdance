@@ -46,10 +46,10 @@ export class EventsService {
     });
   }
 
-  async getEventWithinCoordinates(coordinates: CoordinatesDto) {
+  async getEventWithinCoordinates(coordinates: CoordinatesDto, radius: number) {
     const events = await this.eventsRepository.findEventsWithinRadius(
       coordinates,
-      4
+      radius
     );
 
     return events;
