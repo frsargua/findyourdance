@@ -2,12 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { EventsRepository } from '../repository/events.repository';
 import { CreateEventDto } from '../dto/create-event.dto';
 import { UpdateEventDto } from '../dto/update-event.dto';
-import { SearchEventDto } from '../dto/search-event.dto copy';
-import { Event } from '@app/common';
+import { Event, User } from '@app/common';
 import { AddressEventService } from './address-event.service';
-import { Coordinates } from '../types/events.Controller.types';
+import { CoordinatesDto } from '../dto/coordinates.dto';
+import { IdParamDto } from '../dto/uuid-param.dto.ts';
+import { SearchEventDto } from '../dto/search-event.dto';
 
 interface GetSingleEventOptions {
+  enableRelationship: boolean;
+}
+interface UpdateSingleEventOptions {
   enableRelationship: boolean;
 }
 
@@ -20,12 +24,12 @@ export class EventsService {
 
   async create({ eventAddress, ...createEventDto }: CreateEventDto, user: any) {
     const address = await this.addressService.createAddress(eventAddress);
-    const event = await this.eventsRepository.create({
+    const event = this.eventsRepository.create({
       ...createEventDto,
       eventAddress: address,
       user: user.id,
     });
-    return this.eventsRepository.save(event);
+    return await this.eventsRepository.save(event);
   }
 
   async getSingleEvent(id: string, options?: GetSingleEventOptions) {
@@ -33,7 +37,7 @@ export class EventsService {
     return await this.eventsRepository.findOneById(id, relations);
   }
 
-  async getUserEvents(user: any, options?: GetSingleEventOptions) {
+  async getUserEvents(user: User, options?: GetSingleEventOptions) {
     const relations = options?.enableRelationship ? ['eventAddress'] : [];
 
     return await this.eventsRepository.findAll({
@@ -42,10 +46,9 @@ export class EventsService {
     });
   }
 
-  async getEventWithinCoordinates(coordinates: Coordinates) {
+  async getEventWithinCoordinates(coordinates: CoordinatesDto) {
     const events = await this.eventsRepository.findEventsWithinRadius(
-      coordinates.latitude,
-      coordinates.longitude,
+      coordinates,
       4
     );
 
@@ -53,9 +56,11 @@ export class EventsService {
   }
 
   async updateSingleEvent(
-    { id, eventAddress, ...updateProps }: UpdateEventDto,
-    options?: GetSingleEventOptions
+    id: IdParamDto,
+    updateEventDto: UpdateEventDto,
+    options?: UpdateSingleEventOptions
   ) {
+    const { eventAddress, ...updateProps } = updateEventDto;
     const relations = options?.enableRelationship ? ['eventAddress'] : [];
     const eventToUpdate = await this.eventsRepository.findOneById(
       id,
@@ -79,7 +84,7 @@ export class EventsService {
     return this.eventsRepository.save(eventToUpdate);
   }
 
-  async deleteSingleEvent(id: string) {
+  async deleteSingleEvent(id: IdParamDto) {
     const eventToDelete = await this.eventsRepository.findOneById(id);
     return await this.eventsRepository.remove(eventToDelete);
   }

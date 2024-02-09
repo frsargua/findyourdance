@@ -2,6 +2,7 @@ import { BaseAbstractRepostitory, Event } from '@app/common';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, Repository } from 'typeorm';
+import { CoordinatesDto } from '../dto/coordinates.dto';
 
 @Injectable()
 export class EventsRepository extends BaseAbstractRepostitory<Event> {
@@ -32,11 +33,13 @@ export class EventsRepository extends BaseAbstractRepostitory<Event> {
 
     return deleteResults;
   }
+
   async findEventsWithinRadius(
-    latitude: number,
-    longitude: number,
+    coordinates: CoordinatesDto,
     distance: number
   ): Promise<Event[]> {
+    const { longitude, latitude } = coordinates;
+
     const entity = await this.getEntity();
     const events = await entity
       .createQueryBuilder('event')
