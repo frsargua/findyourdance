@@ -5,6 +5,7 @@ import { UpdateEventDto } from '../dto/update-event.dto';
 import { SearchEventDto } from '../dto/search-event.dto copy';
 import { Event } from '@app/common';
 import { AddressEventService } from './address-event.service';
+import { Coordinates } from '../types/events.Controller.types';
 
 interface GetSingleEventOptions {
   enableRelationship: boolean;
@@ -41,13 +42,14 @@ export class EventsService {
     });
   }
 
-  async getEventWithinCoordinates(user: any, options?: GetSingleEventOptions) {
-    const relations = options?.enableRelationship ? ['eventAddress'] : [];
+  async getEventWithinCoordinates(coordinates: Coordinates) {
+    const events = await this.eventsRepository.findEventsWithinRadius(
+      coordinates.latitude,
+      coordinates.longitude,
+      4
+    );
 
-    return await this.eventsRepository.findAll({
-      where: { user: user.id },
-      relations: relations,
-    });
+    return events;
   }
 
   async updateSingleEvent(

@@ -32,4 +32,25 @@ export class EventsRepository extends BaseAbstractRepostitory<Event> {
 
     return deleteResults;
   }
+  async findEventsWithinRadius(
+    latitude: number,
+    longitude: number,
+    distance: number
+  ): Promise<Event[]> {
+    const entity = await this.getEntity();
+    const events = await entity
+      .createQueryBuilder('event')
+      .leftJoinAndSelect('event.eventAddress', 'events')
+      .where(
+        `ST_DWithin(
+        events.location::geography,
+        ST_MakePoint(:longitude, :latitude)::geography,
+        :distance
+      )`,
+        { longitude, latitude, distance }
+      )
+      .getMany();
+
+    return events;
+  }
 }
