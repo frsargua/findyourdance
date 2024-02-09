@@ -2,11 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { EventsRepository } from '../repository/events.repository';
 import { CreateEventDto } from '../dto/create-event.dto';
 import { UpdateEventDto } from '../dto/update-event.dto';
-import { Event, User } from '@app/common';
+import { User } from '@app/common';
 import { AddressEventService } from './address-event.service';
-import { CoordinatesDto } from '../dto/coordinates.dto';
 import { IdParamDto } from '../dto/uuid-param.dto.ts';
-import { SearchEventDto } from '../dto/search-event.dto';
+import { SearchEventsDto } from '../dto/search-events.dto';
 
 interface GetSingleEventOptions {
   enableRelationship: boolean;
@@ -46,12 +45,9 @@ export class EventsService {
     });
   }
 
-  async getEventWithinCoordinates(coordinates: CoordinatesDto, radius: number) {
-    const events = await this.eventsRepository.findEventsWithinRadius(
-      coordinates,
-      radius
-    );
-
+  async getEventWithinCoordinates(searchEventsDto: SearchEventsDto) {
+    const events =
+      await this.eventsRepository.findEventsWithinRadius(searchEventsDto);
     return events;
   }
 
@@ -95,30 +91,5 @@ export class EventsService {
     );
 
     return deletedResults;
-  }
-
-  async searchEvents(searchEventsDto: SearchEventDto): Promise<Event[]> {
-    const { event_name, start_date_time, end_date_time } = searchEventsDto;
-
-    return await this.eventsRepository.queryWithQueryBuilder((queryBuilder) => {
-      if (event_name) {
-        queryBuilder.andWhere('event.eventName LIKE :eventName', {
-          eventName: `%${event_name}%`,
-        });
-      }
-
-      if (start_date_time) {
-        queryBuilder.andWhere('event.startDateTime >= :startingDate', {
-          startingDate: start_date_time,
-        });
-      }
-
-      if (end_date_time) {
-        queryBuilder.andWhere('event.endDateTime <= :endDate', {
-          endDate: end_date_time,
-        });
-      }
-      return queryBuilder;
-    });
   }
 }

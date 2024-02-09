@@ -10,7 +10,15 @@ async function bootstrap() {
   const app = await NestFactory.create(EventsModule);
   const configService = app.get(ConfigService);
   app.use(cookieParser());
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
+    })
+  );
   app.useLogger(app.get(Logger));
   await app.listen(configService.get(HTTP_PORT)!);
 }

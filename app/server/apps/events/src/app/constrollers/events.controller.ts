@@ -13,8 +13,7 @@ import { EventsService } from '../services/events.service';
 import { CurrentUser, JwtAuthGuard, User } from '@app/common';
 import { CreateEventDto } from '../dto/create-event.dto';
 import { UpdateEventDto } from '../dto/update-event.dto';
-import { SearchEventDto } from '../dto/search-event.dto';
-import { CoordinatesDto } from '../dto/coordinates.dto';
+import { SearchEventsDto } from '../dto/search-events.dto';
 import { IdParamDto } from '../dto/uuid-param.dto.ts';
 import { EnableAddressDto } from '../dto/enableAddressDto';
 
@@ -53,14 +52,8 @@ export class EventsController {
   }
 
   @Get('search/coordinates')
-  async findWithinCoordinates(
-    @Query() coordinates: CoordinatesDto,
-    @Query('radius') radius: number
-  ) {
-    return this.eventsService.getEventWithinCoordinates(
-      coordinates,
-      radius * 1000
-    );
+  async findWithinCoordinates(@Query() searchEventsDto: SearchEventsDto) {
+    return this.eventsService.getEventWithinCoordinates(searchEventsDto);
   }
 
   @Put(':id')
@@ -83,10 +76,5 @@ export class EventsController {
   @Delete('user/all')
   deleteAllByUser(@CurrentUser() user: User) {
     return this.eventsService.deleteUserEvents(user);
-  }
-
-  @Post('search')
-  async search(@Body() searchOptions: SearchEventDto) {
-    return await this.eventsService.searchEvents(searchOptions);
   }
 }

@@ -2,7 +2,7 @@ import { BaseAbstractRepostitory, Event } from '@app/common';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, Repository } from 'typeorm';
-import { CoordinatesDto } from '../dto/coordinates.dto';
+import { SearchEventsDto } from '../dto/search-events.dto';
 
 @Injectable()
 export class EventsRepository extends BaseAbstractRepostitory<Event> {
@@ -35,13 +35,22 @@ export class EventsRepository extends BaseAbstractRepostitory<Event> {
   }
 
   async findEventsWithinRadius(
-    coordinates: CoordinatesDto,
-    distance: number
+    searchEventsDto: SearchEventsDto
   ): Promise<Event[]> {
-    const { longitude, latitude } = coordinates;
+    const {
+      longitude,
+      latitude,
+      radius,
+      start_date_time,
+      end_date_time,
+      max_price,
+      min_price,
+    } = searchEventsDto;
+
+    const distance = radius * 1000;
 
     const entity = await this.getEntity();
-    const events = await entity
+    const query = entity
       .createQueryBuilder('event')
       .leftJoinAndSelect('event.eventAddress', 'events')
       .where(
@@ -51,9 +60,29 @@ export class EventsRepository extends BaseAbstractRepostitory<Event> {
         :distance
       )`,
         { longitude, latitude, distance }
-      )
-      .getMany();
+      );
 
+    if (start_date_time) {
+      query.andWhere('event.start_date_time >= :start_date_time', {
+        start_date_time,
+      });
+    }
+
+    if (end_date_time) {
+      query.andWhere('event.end_date_time <= :end_date_time', {
+        end_date_time,
+      });
+    }
+
+    if (typeof min_price !== 'undefined') {
+      query.andWhere('event.price >= :min_price', { min_price });
+    }
+
+    if (typeof max_price !== 'undefined') {
+      query.andWhere('event.price <= :max_price', { max_price });
+    }
+
+    const events = await query.getMany();
     return events;
   }
 }
