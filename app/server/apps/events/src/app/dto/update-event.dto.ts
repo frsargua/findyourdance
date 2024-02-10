@@ -5,6 +5,7 @@ import {
   IsUUID,
   Length,
 } from 'class-validator';
+import { CreateAddressDto } from './address.dto';
 
 export class UpdateEventDto {
   @IsUUID()
@@ -16,11 +17,14 @@ export class UpdateEventDto {
   event_name: string;
 
   @IsDateString()
-  start_date_time: Date;
+  start_date_time: string;
 
   @IsDateString()
-  end_date_time: Date;
+  end_date_time: string;
 
   @IsAlphanumeric()
   description: string;
+
+  @IsNotEmpty()
+  eventAddress: CreateAddressDto;
 }

@@ -12,6 +12,11 @@ interface HasId {
   id: string;
 }
 
+interface MyFindOptions<T> extends FindOneOptions<T> {
+  where: FindOptionsWhere<T>;
+  relations?: string[];
+}
+
 export abstract class BaseAbstractRepostitory<T extends HasId>
   implements BaseInterfaceRepository<T>
 {
@@ -37,12 +42,14 @@ export abstract class BaseAbstractRepostitory<T extends HasId>
     return this.entity.create(data);
   }
 
-  public async findOneById(id: any): Promise<T> {
-    const options: FindOptionsWhere<T> = {
-      id: id,
+  public async findOneById(id: any, relations: string[] = []): Promise<T> {
+    const options: MyFindOptions<T> = {
+      where: { id: id },
+      relations: relations,
     };
+
     return this.handleNotFound(
-      await this.entity.findOneBy(options),
+      await this.entity.findOne(options),
       'Document was not found',
       options
     );
@@ -68,6 +75,10 @@ export abstract class BaseAbstractRepostitory<T extends HasId>
     return await this.entity.remove(data);
   }
 
+  public async removeAll(data: T): Promise<T> {
+    return await this.entity.remove(data);
+  }
+
   public async preload(entityLike: DeepPartial<T>): Promise<T> {
     return this.handleNotFound(
       await this.entity.preload(entityLike),
@@ -82,6 +93,10 @@ export abstract class BaseAbstractRepostitory<T extends HasId>
       'Document was not found',
       options
     );
+  }
+
+  public async getEntity() {
+    return this.entity;
   }
 
   public async queryWithQueryBuilder(

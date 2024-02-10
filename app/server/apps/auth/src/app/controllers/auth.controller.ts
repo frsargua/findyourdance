@@ -4,6 +4,7 @@ import { CurrentUser, User } from '@app/common';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { LocalAuthGuard } from '../guards/local-auth.guard';
 import { Response } from 'express';
+import { MessagePattern, Payload } from '@nestjs/microservices';
 
 @Controller('auth')
 export class AuthController {
@@ -33,5 +34,12 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response
   ) {
     response.send(user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @MessagePattern('authenticate')
+  async authenticate(@CurrentUser() user: any, @Payload() data: any) {
+    console.log('Current user: ' + JSON.stringify(data.user));
+    return user;
   }
 }

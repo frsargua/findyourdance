@@ -7,10 +7,16 @@ import * as bcrypt from 'bcryptjs';
 import { CreateUserDto } from '../dto/create-user.dt';
 import { UsersRepository } from '../repository/users.repository';
 import { GetUserDto } from '../dto/get-user.dto';
+import { AddressUserService } from './address-user.service';
+import { GenericAddressDto } from '../dto/create-address.dto';
+import { User } from '@app/common';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly usersRepository: UsersRepository) {}
+  constructor(
+    private readonly usersRepository: UsersRepository,
+    private readonly addressService: AddressUserService
+  ) {}
 
   async create(createUserDto: CreateUserDto) {
     await this.validateCreateUserDto(createUserDto);
@@ -31,6 +37,13 @@ export class UsersService {
       return;
     }
     throw new UnprocessableEntityException('Email already exits');
+  }
+
+  async updateUserAddress(user: User, userAddress: GenericAddressDto) {
+    const address = await this.addressService.createAddress(userAddress);
+    const userFromDb = await this.usersRepository.findOneById(user.id);
+    userFromDb.userAddress = address;
+    return await this.usersRepository.save(userFromDb);
   }
 
   async verifyUser(email: string, password: string) {

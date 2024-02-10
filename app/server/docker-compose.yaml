@@ -38,18 +38,32 @@ services:
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
+  events:
+    build:
+      context: .
+      dockerfile: ./apps/events/Dockerfile
+      target: development
+    command: pnpm run start:dev events
+    env_file:
+      - ./apps/events/.env
+    ports:
+      - '3003:3003'
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
   postgres-database:
     container_name: postgres-database
-    image: postgres:latest
+    # build:
+    #   context: .
+    #   dockerfile: ./libs/common/src/database/Dockerfile.postgres
+    image: postgis/postgis:latest
     environment:
       POSTGRES_DB: findyourdance
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Fabian123!
     ports:
       - '6543:5432'
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-volumes:
-  postgres_data:
-##Closing branch
+#     volumes:
+#       - postgres_data:/var/lib/postgresql/data
+# volumes:
+#   postgres_data:
