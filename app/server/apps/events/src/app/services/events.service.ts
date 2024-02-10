@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { EventsRepository } from '../repository/events.repository';
 import { CreateEventDto } from '../dto/create-event.dto';
 import { UpdateEventDto } from '../dto/update-event.dto';
@@ -52,11 +52,11 @@ export class EventsService {
   }
 
   async updateSingleEvent(
+    user: User,
     id: IdParamDto,
     updateEventDto: UpdateEventDto,
     options?: UpdateSingleEventOptions
   ) {
-    const { eventAddress, ...updateProps } = updateEventDto;
     const relations = options?.enableRelationship ? ['eventAddress'] : [];
     const eventToUpdate = await this.eventsRepository.findOneById(
       id,
@@ -64,6 +64,10 @@ export class EventsService {
     );
 
     if (!eventToUpdate) throw new Error('Event not found');
+
+    await this.validateEventOwnership(eventToUpdate.id, user.id);
+
+    const { eventAddress, ...updateProps } = updateEventDto;
 
     Object.assign(eventToUpdate, updateProps);
 
@@ -80,8 +84,13 @@ export class EventsService {
     return this.eventsRepository.save(eventToUpdate);
   }
 
-  async deleteSingleEvent(id: IdParamDto) {
+  async deleteSingleEvent(user: User, id: IdParamDto) {
     const eventToDelete = await this.eventsRepository.findOneById(id);
+
+    if (!eventToDelete) throw new Error('Event not found');
+
+    await this.validateEventOwnership(eventToDelete.id, user.id);
+
     return await this.eventsRepository.remove(eventToDelete);
   }
 
@@ -91,5 +100,20 @@ export class EventsService {
     );
 
     return deletedResults;
+  }
+
+  private async validateEventOwnership(eventId: string, userId: string) {
+    try {
+      await this.eventsRepository.findByCondition({
+        where: {
+          id: eventId,
+          user: userId,
+        },
+      });
+    } catch (error) {
+      throw new ForbiddenException(
+        'Not allowed to update event, not event owner'
+      );
+    }
   }
 }

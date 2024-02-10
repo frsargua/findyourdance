@@ -56,20 +56,31 @@ export class EventsController {
     return this.eventsService.getEventWithinCoordinates(searchEventsDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Put(':id')
   async updateById(
     @Param('id') id: IdParamDto,
     @Query() query: EnableAddressDto,
-    @Body() updateEventDto: UpdateEventDto
+    @Body() updateEventDto: UpdateEventDto,
+    @CurrentUser() user: User
   ) {
-    return await this.eventsService.updateSingleEvent(id, updateEventDto, {
-      enableRelationship: query.with_address,
-    });
+    return await this.eventsService.updateSingleEvent(
+      user,
+      id,
+      updateEventDto,
+      {
+        enableRelationship: query.with_address,
+      }
+    );
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete('id')
-  async deleteSingleEvent(@Param('id') id: IdParamDto) {
-    return await this.eventsService.deleteSingleEvent(id);
+  async deleteSingleEvent(
+    @Param('id') id: IdParamDto,
+    @CurrentUser() user: User
+  ) {
+    return await this.eventsService.deleteSingleEvent(user, id);
   }
 
   @UseGuards(JwtAuthGuard)
