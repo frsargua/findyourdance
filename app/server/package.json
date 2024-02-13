@@ -31,6 +31,7 @@
     "@nestjs/passport": "^10.0.3",
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/typeorm": "^10.0.2",
+    "aws-sdk": "^2.1557.0",
     "axios": "^1.6.7",
     "bcryptjs": "^2.4.3",
     "bwip-js": "^4.2.0",
