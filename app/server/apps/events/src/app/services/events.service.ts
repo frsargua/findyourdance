@@ -6,6 +6,7 @@ import { User } from '@app/common';
 import { AddressEventService } from './address-event.service';
 import { IdParamDto } from '../dto/uuid-param.dto.ts';
 import { SearchEventsDto } from '../dto/search-events.dto';
+import { ImageService } from './image.service';
 
 interface GetSingleEventOptions {
   enableRelationship: boolean;
@@ -18,6 +19,7 @@ interface UpdateSingleEventOptions {
 export class EventsService {
   constructor(
     private readonly eventsRepository: EventsRepository,
+    private readonly imageService: ImageService,
     private readonly addressService: AddressEventService
   ) {}
 

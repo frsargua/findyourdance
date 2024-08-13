@@ -4,6 +4,9 @@
     "declaration": true,
     "outDir": "../../dist/libs/common"
   },
+  "paths": {
+    "*": ["node_modules/*"]
+  },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
 }

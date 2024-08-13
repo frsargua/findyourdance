@@ -11,5 +11,6 @@ import { ImagesRepository } from '../repository/images.repository';
     TypeOrmModule.forFeature([EventsImages]),
   ],
   providers: [ImageService, ImagesRepository],
+  exports: [ImageService, ImagesRepository],
 })
-export class S3Module {}
+export class ImageModule {}
