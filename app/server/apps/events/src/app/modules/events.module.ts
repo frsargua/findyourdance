@@ -10,11 +10,14 @@ import { HTTP_PORT } from '../constants/config.constants';
 import { AddressModule } from './address-event.module';
 import { AddressEventService } from '../services/address-event.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { ImageModule } from './image.module';
+import { ImageService } from '../services/image.service';
 
 @Module({
   imports: [
     DatabaseModule,
     AddressModule,
+    ImageModule,
     TypeOrmModule.forFeature([Event]),
     ConfigModule.forRoot({
       isGlobal: true,
@@ -23,6 +26,9 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         [HTTP_PORT]: Joi.number().required(),
         AUTH_HOST: Joi.string().required(),
         AUTH_PORT: Joi.number().required(),
+        AWS_ACCESS_KEY_ID: Joi.string().required(),
+        AWS_SECRET_ACCESS_KEY: Joi.string().required(),
+        AWS_REGION: Joi.string().required(),
       }),
     }),
     ClientsModule.registerAsync([
@@ -40,6 +46,11 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
     ]),
   ],
   controllers: [EventsController],
-  providers: [EventsService, EventsRepository, AddressEventService],
+  providers: [
+    EventsService,
+    ImageService,
+    EventsRepository,
+    AddressEventService,
+  ],
 })
 export class EventsModule {}

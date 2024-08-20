@@ -6,6 +6,7 @@ import { User } from '@app/common';
 import { AddressEventService } from './address-event.service';
 import { IdParamDto } from '../dto/uuid-param.dto.ts';
 import { SearchEventsDto } from '../dto/search-events.dto';
+import { ImageService } from './image.service';
 
 interface GetSingleEventOptions {
   enableRelationship: boolean;
@@ -18,6 +19,7 @@ interface UpdateSingleEventOptions {
 export class EventsService {
   constructor(
     private readonly eventsRepository: EventsRepository,
+    private readonly imageService: ImageService,
     private readonly addressService: AddressEventService
   ) {}
 
@@ -29,6 +31,11 @@ export class EventsService {
       user: user.id,
     });
     return await this.eventsRepository.save(event);
+  }
+
+  async uploadEventImages(files: Express.Multer.File[]) {
+    const images = await this.imageService.processImagesUpload(files);
+    return images;
   }
 
   async getSingleEvent(id: string, options?: GetSingleEventOptions) {
