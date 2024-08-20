@@ -32,16 +32,15 @@ export class ImageService {
 
     try {
       const results = await Promise.all(uploadPromises);
-      console.log('All files have been uploaded successfully:', results);
+      // console.log('All files have been uploaded successfully:', results);
       return results;
     } catch (error) {
-      console.error('Error uploading files:', error);
+      // console.error('Error uploading files:', error);
       throw error;
     }
   }
 
   async uploadFile(file: { buffer?: any; mimetype?: any; originalname?: any }) {
-    console.log(file);
     const { originalname } = file;
 
     return await this.s3_upload(
@@ -55,9 +54,8 @@ export class ImageService {
   async s3_upload(file: any, bucket: string, name: string, mimetype: any) {
     const params = {
       Bucket: bucket,
-      Key: String(name),
+      Key: `images/original/${String(name)}`,
       Body: file,
-      ACL: 'public-read',
       ContentType: mimetype,
       ContentDisposition: 'inline',
       CreateBucketConfiguration: {
@@ -69,7 +67,7 @@ export class ImageService {
       const s3Response = await this.s3.upload(params).promise();
       return s3Response;
     } catch (e) {
-      console.log(e);
+      throw new Error(e);
     }
   }
 }

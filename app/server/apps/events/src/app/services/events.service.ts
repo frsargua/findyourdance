@@ -33,6 +33,11 @@ export class EventsService {
     return await this.eventsRepository.save(event);
   }
 
+  async uploadEventImages(files: Express.Multer.File[]) {
+    const images = await this.imageService.processImagesUpload(files);
+    return images;
+  }
+
   async getSingleEvent(id: string, options?: GetSingleEventOptions) {
     const relations = options?.enableRelationship ? ['eventAddress'] : [];
     return await this.eventsRepository.findOneById(id, relations);

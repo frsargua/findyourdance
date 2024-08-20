@@ -7,8 +7,11 @@ import {
   Post,
   Put,
   Query,
+  UseInterceptors,
   UseGuards,
+  UploadedFiles,
 } from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { EventsService } from '../services/events.service';
 import { CurrentUser, JwtAuthGuard, User } from '@app/common';
 import { CreateEventDto } from '../dto/create-event.dto';
@@ -28,6 +31,17 @@ export class EventsController {
     @CurrentUser() user: User
   ) {
     return await this.eventsService.create(createEventDto, user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('upload')
+  @UseInterceptors(FilesInterceptor('files'))
+  async uploadEventImages(
+    @UploadedFiles() files: Express.Multer.File[] // Inject the uploaded files
+    // @Body() eventId: IdParamDto
+  ) {
+    await this.eventsService.uploadEventImages(files);
+    // console.log(eventId);
   }
 
   @UseGuards(JwtAuthGuard)
