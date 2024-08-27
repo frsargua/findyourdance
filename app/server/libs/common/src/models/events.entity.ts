@@ -24,4 +24,7 @@ export class Event extends AbstractEntity {
 
   @Column()
   user: string;
+
+  @Column()
+  published: boolean;
 }

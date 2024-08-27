@@ -1,5 +1,6 @@
 import {
   IsAlphanumeric,
+  IsBoolean,
   IsDateString,
   IsNotEmpty,
   Length,
@@ -23,4 +24,7 @@ export class CreateEventDto {
 
   @IsNotEmpty()
   eventAddress: CreateAddressDto;
+
+  @IsBoolean()
+  published: boolean = false;
 }

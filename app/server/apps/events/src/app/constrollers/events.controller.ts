@@ -19,6 +19,7 @@ import { UpdateEventDto } from '../dto/update-event.dto';
 import { SearchEventsDto } from '../dto/search-events.dto';
 import { IdParamDto } from '../dto/uuid-param.dto.ts';
 import { EnableAddressDto } from '../dto/enableAddressDto';
+import { UpdateEventPublishedStatusDto } from '../dto/update-event-published-status.dto';
 
 @Controller('events')
 export class EventsController {
@@ -71,7 +72,7 @@ export class EventsController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Put(':id')
+  @Put('/:id')
   async updateById(
     @Param('id') id: IdParamDto,
     @Query() query: EnableAddressDto,
@@ -85,6 +86,18 @@ export class EventsController {
       {
         enableRelationship: query.with_address,
       }
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('/publish/event')
+  async publishByID(
+    @Body() updateEventDto: UpdateEventPublishedStatusDto,
+    @CurrentUser() user: User
+  ) {
+    return await this.eventsService.switchEventPublishedStatus(
+      user,
+      updateEventDto
     );
   }
 
