@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { EventsRepository } from '../repository/events.repository';
 import { CreateEventDto } from '../dto/create-event.dto';
 import { UpdateEventDto } from '../dto/update-event.dto';
@@ -7,6 +11,7 @@ import { AddressEventService } from './address-event.service';
 import { IdParamDto } from '../dto/uuid-param.dto.ts';
 import { SearchEventsDto } from '../dto/search-events.dto';
 import { ImageService } from './image.service';
+import { UpdateEventPublishedStatusDto } from '../dto/update-event-published-status.dto';
 
 interface GetSingleEventOptions {
   enableRelationship: boolean;
@@ -91,6 +96,27 @@ export class EventsService {
     return this.eventsRepository.save(eventToUpdate);
   }
 
+  async switchEventPublishedStatus(
+    user: User,
+    updateEventDto: UpdateEventPublishedStatusDto
+  ) {
+    const { published: updatingPublished, id } = updateEventDto;
+
+    const eventToUpdate = await this.eventsRepository.findOneById(id);
+
+    if (!eventToUpdate) throw new NotFoundException('Event not found');
+
+    await this.validateEventOwnership(eventToUpdate.id, user.id);
+
+    if (updatingPublished === eventToUpdate.published) {
+      console.error(`The publish status is already: ${updatingPublished}`);
+      return eventToUpdate;
+    }
+
+    eventToUpdate.published = updatingPublished;
+
+    return await this.eventsRepository.save(eventToUpdate);
+  }
   async deleteSingleEvent(user: User, id: IdParamDto) {
     const eventToDelete = await this.eventsRepository.findOneById(id);
 
