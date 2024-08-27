@@ -117,6 +117,7 @@ export class EventsService {
 
     return await this.eventsRepository.save(eventToUpdate);
   }
+
   async deleteSingleEvent(user: User, id: IdParamDto) {
     const eventToDelete = await this.eventsRepository.findOneById(id);
 
