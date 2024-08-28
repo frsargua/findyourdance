@@ -1,4 +1,4 @@
-import { AbstractEntity, EventAddress } from '@app/common';
+import { AbstractEntity, EventAddress, EventReview } from '@app/common';
 import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 import { EventsImages } from './events-images.entity';
 
@@ -21,6 +21,9 @@ export class Event extends AbstractEntity {
 
   @OneToMany(() => EventsImages, (image) => image.event)
   images: EventsImages[];
+
+  @OneToMany(() => EventReview, (review) => review.event)
+  reviews: EventReview[]; // Adding the reviews relationship
 
   @Column()
   user: string;
