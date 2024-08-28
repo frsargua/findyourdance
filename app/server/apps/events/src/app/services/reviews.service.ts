@@ -1,8 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { ImageService } from './image.service';
 import { CreateReviewDto } from '../dto/create-review.dto';
 import { EventsReviewsRepository } from '../repository/event-reviews.repository';
 import { EventsService } from './events.service';
+import { User } from '@app/common';
+import { UpdateReviewPublishStatusDto } from '../dto/update-review-publish-status.dto';
 
 @Injectable()
 export class EventsReviewService {
@@ -28,5 +34,48 @@ export class EventsReviewService {
     });
 
     return this.reviewRepository.save(review);
+  }
+
+  async getUserEventsReviews(user: User) {
+    return await this.reviewRepository.findAll({
+      where: { reviewer: user.id },
+    });
+  }
+
+  async switchEventReviewPublishedStatus(
+    user: User,
+    updateReviewDto: UpdateReviewPublishStatusDto
+  ) {
+    const { id, published: reviewNewStatus } = updateReviewDto;
+
+    const reviewToUpdate = await this.reviewRepository.findOneById(id);
+
+    if (!reviewToUpdate) throw new NotFoundException('Review not found');
+
+    await this.validateEventOwnership(reviewToUpdate.id, user.id);
+
+    if (reviewToUpdate.published === reviewNewStatus) {
+      console.error(`The publish status is already: ${reviewNewStatus}`);
+      return reviewToUpdate;
+    }
+
+    reviewToUpdate.published = reviewNewStatus;
+
+    return await this.reviewRepository.save(reviewToUpdate);
+  }
+
+  private async validateEventOwnership(reviewId: string, userId: string) {
+    try {
+      await this.reviewRepository.findByCondition({
+        where: {
+          id: reviewId,
+          reviewer: userId,
+        },
+      });
+    } catch (error) {
+      throw new ForbiddenException(
+        'Not allowed to update event, not event owner'
+      );
+    }
   }
 }
