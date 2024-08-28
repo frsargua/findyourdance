@@ -1,7 +1,6 @@
-import { AbstractEntity, Event, User } from '@app/common';
+import { AbstractEntity, Event, ReviewMedia } from '@app/common';
 import { IsInt, Min, Max } from 'class-validator';
 import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
-import { ReviewMedia } from './reviews-media.entity';
 
 @Entity()
 export class EventReview extends AbstractEntity {
@@ -17,8 +16,8 @@ export class EventReview extends AbstractEntity {
   @ManyToOne(() => Event, (event) => event.reviews, { onDelete: 'CASCADE' })
   event: Event;
 
-  @ManyToOne(() => User, { nullable: false })
-  reviewer: User;
+  @Column()
+  reviewer: string;
 
   @Column({ type: 'int', default: 0 })
   helpful_count: number;

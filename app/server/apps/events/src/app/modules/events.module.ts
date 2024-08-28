@@ -1,7 +1,13 @@
 import { Module } from '@nestjs/common';
 import { EventsController } from '../constrollers/events.controller';
 import { EventsService } from '../services/events.service';
-import { AUTH_SERVICE, DatabaseModule, Event } from '@app/common';
+import {
+  AUTH_SERVICE,
+  DatabaseModule,
+  Event,
+  EventReview,
+  ReviewMedia,
+} from '@app/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import * as Joi from 'joi';
 import { EventsRepository } from '../repository/events.repository';
@@ -18,7 +24,7 @@ import { ImageService } from '../services/image.service';
     DatabaseModule,
     AddressModule,
     ImageModule,
-    TypeOrmModule.forFeature([Event]),
+    TypeOrmModule.forFeature([Event, EventReview, ReviewMedia]),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: './apps/events/.env',
