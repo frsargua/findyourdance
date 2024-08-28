@@ -1,20 +1,19 @@
-import { Event } from '@app/common';
 import {
-  IsAlphanumeric,
   IsBoolean,
   IsNotEmpty,
+  IsString,
   Length,
   Max,
   Min,
 } from 'class-validator';
 
-export class CreateEventDto {
-  @IsAlphanumeric()
+export class CreateReviewDto {
+  @IsString()
   @Length(1, 200)
   comment: string;
 
   @IsNotEmpty()
-  event: Event;
+  event: string;
 
   @IsNotEmpty()
   @Min(0)

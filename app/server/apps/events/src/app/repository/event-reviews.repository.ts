@@ -7,7 +7,7 @@ import { DeleteResult, Repository } from 'typeorm';
 export class EventsReviewsRepository extends BaseAbstractRepostitory<EventReview> {
   protected logger: Logger = new Logger(EventsReviewsRepository.name);
   constructor(
-    @InjectRepository(Event)
+    @InjectRepository(EventReview)
     private readonly eventsReviewsRepository: Repository<EventReview>
   ) {
     super(eventsReviewsRepository);

@@ -20,10 +20,15 @@ import { SearchEventsDto } from '../dto/search-events.dto';
 import { IdParamDto } from '../dto/uuid-param.dto.ts';
 import { EnableAddressDto } from '../dto/enableAddressDto';
 import { UpdateEventPublishedStatusDto } from '../dto/update-event-published-status.dto';
+import { CreateReviewDto } from '../dto/create-review.dto';
+import { EventsReviewService } from '../services/reviews.service';
 
 @Controller('events')
 export class EventsController {
-  constructor(private readonly eventsService: EventsService) {}
+  constructor(
+    private readonly eventsService: EventsService,
+    private readonly eventReviewService: EventsReviewService
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Post()
@@ -32,6 +37,15 @@ export class EventsController {
     @CurrentUser() user: User
   ) {
     return await this.eventsService.create(createEventDto, user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('create/review')
+  async createReview(
+    @Body() createEventDto: CreateReviewDto,
+    @CurrentUser() user: User
+  ) {
+    return await this.eventReviewService.create(createEventDto, user);
   }
 
   @UseGuards(JwtAuthGuard)

@@ -18,6 +18,8 @@ import { AddressEventService } from '../services/address-event.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ImageModule } from './image.module';
 import { ImageService } from '../services/image.service';
+import { EventsReviewService } from '../services/reviews.service';
+import { EventsReviewsRepository } from '../repository/event-reviews.repository';
 
 @Module({
   imports: [
@@ -54,6 +56,8 @@ import { ImageService } from '../services/image.service';
   controllers: [EventsController],
   providers: [
     EventsService,
+    EventsReviewService,
+    EventsReviewsRepository,
     ImageService,
     EventsRepository,
     AddressEventService,

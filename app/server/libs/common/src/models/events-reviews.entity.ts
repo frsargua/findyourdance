@@ -32,6 +32,9 @@ export class EventReview extends AbstractEntity {
   @Column({ type: 'text', nullable: true })
   response: string;
 
-  @OneToMany(() => ReviewMedia, (media) => media.review, { cascade: true })
+  @OneToMany(() => ReviewMedia, (media) => media.review, {
+    cascade: true,
+    nullable: true,
+  })
   media: ReviewMedia[];
 }
