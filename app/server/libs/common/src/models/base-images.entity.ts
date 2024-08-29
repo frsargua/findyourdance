@@ -1,6 +1,6 @@
 import { Column, Entity, ManyToOne } from 'typeorm';
+import { AbstractEntity } from '../database';
 import { Event } from './events.entity';
-import { BaseImages } from './base-images.entity';
 
 enum ImageType {
   MainImage = 'mainImage',
@@ -9,7 +9,19 @@ enum ImageType {
 }
 
 @Entity()
-export class EventsImages extends BaseImages {
+export class BaseImages extends AbstractEntity {
+  @Column({ nullable: true })
+  originalUrl: string;
+
+  @Column({ nullable: true })
+  lowResolutionPath: string;
+
+  @Column({ nullable: true })
+  mediumResolutionPath: string;
+
+  @Column({ nullable: true })
+  highResolutionPath: string;
+
   @Column({
     type: 'enum',
     default: ImageType.General,

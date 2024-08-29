@@ -12,10 +12,8 @@ import { IdParamDto } from '../dto/uuid-param.dto.ts';
 import { SearchEventsDto } from '../dto/search-events.dto';
 import { ImageService } from './image.service';
 import { UpdateEventPublishedStatusDto } from '../dto/update-event-published-status.dto';
+import { EnableEventOptionsDto } from '../dto/enable-event-optionsDto';
 
-interface GetSingleEventOptions {
-  enableRelationship: boolean;
-}
 interface UpdateSingleEventOptions {
   enableRelationship: boolean;
 }
@@ -27,6 +25,11 @@ export class EventsService {
     private readonly imageService: ImageService,
     private readonly addressService: AddressEventService
   ) {}
+
+  relationsMapping: Record<string, string> = {
+    with_address: 'eventAddress',
+    with_reviews: 'reviews',
+  };
 
   async create({ eventAddress, ...createEventDto }: CreateEventDto, user: any) {
     const address = await this.addressService.createAddress(eventAddress);
@@ -43,13 +46,14 @@ export class EventsService {
     return images;
   }
 
-  async getSingleEvent(id: string, options?: GetSingleEventOptions) {
-    const relations = options?.enableRelationship ? ['eventAddress'] : [];
+  async getSingleEvent(id: string, options?: EnableEventOptionsDto) {
+    const relations = this.getRelationsFromOptions(options);
+
     return await this.eventsRepository.findOneById(id, relations);
   }
 
-  async getUserEvents(user: User, options?: GetSingleEventOptions) {
-    const relations = options?.enableRelationship ? ['eventAddress'] : [];
+  async getUserEvents(user: User, options?: EnableEventOptionsDto) {
+    const relations = this.getRelationsFromOptions(options);
 
     return await this.eventsRepository.findAll({
       where: { user: user.id },
@@ -149,5 +153,17 @@ export class EventsService {
         'Not allowed to update event, not event owner'
       );
     }
+  }
+
+  private getRelationsFromOptions(options?: EnableEventOptionsDto): string[] {
+    if (!options) return [];
+
+    const result = Object.keys(this.relationsMapping)
+      .filter((key) => options[key as keyof EnableEventOptionsDto])
+      .map((key) => this.relationsMapping[key]);
+
+    console.log(result);
+
+    return result;
   }
 }
