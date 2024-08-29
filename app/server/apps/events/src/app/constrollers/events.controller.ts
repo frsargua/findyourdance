@@ -18,7 +18,7 @@ import { CreateEventDto } from '../dto/create-event.dto';
 import { UpdateEventDto } from '../dto/update-event.dto';
 import { SearchEventsDto } from '../dto/search-events.dto';
 import { IdParamDto } from '../dto/uuid-param.dto.ts';
-import { EnableAddressDto } from '../dto/enableAddressDto';
+import { EnableEventOptionsDto } from '../dto/enable-event-optionsDto';
 import { UpdateEventPublishedStatusDto } from '../dto/update-event-published-status.dto';
 import { CreateReviewDto } from '../dto/create-review.dto';
 import { EventsReviewService } from '../services/reviews.service';
@@ -78,21 +78,17 @@ export class EventsController {
   @Get('user/all')
   async findByUser(
     @CurrentUser() user: User,
-    @Query() query: EnableAddressDto
+    @Query() query: EnableEventOptionsDto
   ) {
-    return await this.eventsService.getUserEvents(user, {
-      enableRelationship: query.with_address,
-    });
+    return await this.eventsService.getUserEvents(user, query);
   }
 
   @Get(':id')
   async findById(
     @Param() params: IdParamDto,
-    @Query() query: EnableAddressDto
+    @Query() query: EnableEventOptionsDto
   ) {
-    return this.eventsService.getSingleEvent(params.id, {
-      enableRelationship: query.with_address,
-    });
+    return this.eventsService.getSingleEvent(params.id, query);
   }
 
   @Get('search/coordinates')
@@ -104,7 +100,7 @@ export class EventsController {
   @Put('/:id')
   async updateById(
     @Param('id') id: IdParamDto,
-    @Query() query: EnableAddressDto,
+    @Query() query: EnableEventOptionsDto,
     @Body() updateEventDto: UpdateEventDto,
     @CurrentUser() user: User
   ) {
