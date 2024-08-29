@@ -49,6 +49,21 @@ export class EventsController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('review/:id')
+  async getSingleReview(
+    @Param() reviewIdDto: IdParamDto,
+    @CurrentUser() user: User
+  ) {
+    return await this.eventReviewService.getSingleEvent(reviewIdDto, user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('reviews')
+  async getReviews(@CurrentUser() user: User) {
+    return await this.eventReviewService.getUserEventsReviews(user);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post('upload')
   @UseInterceptors(FilesInterceptor('files'))
   async uploadEventImages(

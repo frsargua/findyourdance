@@ -1,14 +1,11 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { ImageService } from './image.service';
 import { CreateReviewDto } from '../dto/create-review.dto';
 import { EventsReviewsRepository } from '../repository/event-reviews.repository';
 import { EventsService } from './events.service';
 import { User } from '@app/common';
 import { UpdateReviewPublishStatusDto } from '../dto/update-review-publish-status.dto';
+import { IdParamDto } from '../dto/uuid-param.dto.ts';
 
 @Injectable()
 export class EventsReviewService {
@@ -36,6 +33,10 @@ export class EventsReviewService {
     return this.reviewRepository.save(review);
   }
 
+  async getSingleEvent(reviewIdDto: IdParamDto, currentUser: User) {
+    return await this.validateEventOwnership(reviewIdDto.id, currentUser.id);
+  }
+
   async getUserEventsReviews(user: User) {
     return await this.reviewRepository.findAll({
       where: { reviewer: user.id },
@@ -46,13 +47,12 @@ export class EventsReviewService {
     user: User,
     updateReviewDto: UpdateReviewPublishStatusDto
   ) {
-    const { id, published: reviewNewStatus } = updateReviewDto;
+    const { id: reviewNewId, published: reviewNewStatus } = updateReviewDto;
 
-    const reviewToUpdate = await this.reviewRepository.findOneById(id);
-
-    if (!reviewToUpdate) throw new NotFoundException('Review not found');
-
-    await this.validateEventOwnership(reviewToUpdate.id, user.id);
+    const reviewToUpdate = await this.validateEventOwnership(
+      reviewNewId,
+      user.id
+    );
 
     if (reviewToUpdate.published === reviewNewStatus) {
       console.error(`The publish status is already: ${reviewNewStatus}`);
@@ -66,7 +66,7 @@ export class EventsReviewService {
 
   private async validateEventOwnership(reviewId: string, userId: string) {
     try {
-      await this.reviewRepository.findByCondition({
+      return await this.reviewRepository.findByCondition({
         where: {
           id: reviewId,
           reviewer: userId,
@@ -74,7 +74,7 @@ export class EventsReviewService {
       });
     } catch (error) {
       throw new ForbiddenException(
-        'Not allowed to update event, not event owner'
+        'Not allowed to update event, not review owner'
       );
     }
   }
