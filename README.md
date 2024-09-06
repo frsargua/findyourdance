@@ -3,7 +3,7 @@
  Welcome to **FindYourDance** – your gateway to the dance communities and events around you. Explore our website and join the movement today!
 
  - **Website**: [findyourdance.co.uk](http://www.findyourdance.co.uk)
- - **Project Management**: [Kanban board on Github Projects](https://trello.com/b/ex00leyb/madagascar-team)
+ - **Project Management**: [Kanban board on Github Projects](https://github.com/users/frsargua/projects/4)
 
  ## About The Project
 
