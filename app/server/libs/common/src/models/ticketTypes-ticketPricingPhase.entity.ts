@@ -40,6 +40,10 @@ export class TicketPricingPhase extends AbstractEntity {
   @IsNotEmpty({ message: 'Phase name is required for custom pricing strategy' })
   customPhaseName?: string;
 
+  isActive(date: Date = new Date()): boolean {
+    return this.effectiveDate <= date && date <= this.ticketType.saleEndDate;
+  }
+
   getDisplayName(): string {
     if (this.phaseCategory === TicketCategoryEnum.CUSTOM) {
       return this.customPhaseName || 'Custom';
