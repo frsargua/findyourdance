@@ -1,4 +1,12 @@
-import { Entity, Index, Column, ManyToOne, Check } from 'typeorm';
+import {
+  Entity,
+  Index,
+  Column,
+  ManyToOne,
+  Check,
+  BeforeUpdate,
+  BeforeInsert,
+} from 'typeorm';
 import {
   AbstractEntity,
   TicketCategoryEnum,
@@ -37,5 +45,20 @@ export class TicketPricingPhase extends AbstractEntity {
       return this.customPhaseName || 'Custom';
     }
     return this.phaseCategory;
+  }
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  async validateEffectiveDate() {
+    if (this.ticketType) {
+      if (
+        this.effectiveDate < this.ticketType.saleStartDate ||
+        this.effectiveDate > this.ticketType.saleEndDate
+      ) {
+        throw new Error(
+          'Pricing phase effective date must be within the ticket type sale dates'
+        );
+      }
+    }
   }
 }

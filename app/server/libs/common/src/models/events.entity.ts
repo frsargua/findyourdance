@@ -48,4 +48,24 @@ export class Event extends AbstractEntity {
   @Column()
   @IsBoolean()
   published: boolean;
+
+  @Column({ default: false })
+  @IsBoolean()
+  ticketsRequired: boolean;
+
+  async getCurrentCheapestTicketPrice(): Promise<number | null> {
+    if (!this.ticketsRequired) {
+      return null;
+    }
+
+    const currentPrices = await Promise.all(
+      this.ticketTypes.map((ticket) => ticket.getCurrentPrice())
+    );
+
+    const validPrices = currentPrices.filter(
+      (price) => price !== null
+    ) as number[];
+
+    return validPrices.length > 0 ? Math.min(...validPrices) : null;
+  }
 }

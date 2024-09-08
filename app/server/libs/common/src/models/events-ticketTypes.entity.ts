@@ -1,4 +1,13 @@
-import { Entity, Index, Column, Check, ManyToOne, OneToMany } from 'typeorm';
+import {
+  Entity,
+  Index,
+  Column,
+  Check,
+  ManyToOne,
+  OneToMany,
+  BeforeInsert,
+  BeforeUpdate,
+} from 'typeorm';
 import {
   AbstractEntity,
   Event,
@@ -6,6 +15,8 @@ import {
   TicketPricingPhase,
   TimestampColumn,
 } from '@app/common';
+import { Type } from 'class-transformer';
+import { ValidateNested } from 'class-validator';
 
 @Entity()
 @Index(['event', 'name'], { unique: true })
@@ -54,6 +65,8 @@ export class TicketType extends AbstractEntity {
     (priceChange) => priceChange.ticketType,
     { nullable: false }
   )
+  @ValidateNested({ each: true })
+  @Type(() => TicketPricingPhase)
   pricingPhases: TicketPricingPhase[];
 
   @Column({ type: 'int', nullable: true })
@@ -69,4 +82,34 @@ export class TicketType extends AbstractEntity {
 
   @Column({ type: 'boolean', default: false, nullable: false })
   ageRestriction: boolean;
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  async validateDates() {
+    if (this.event) {
+      if (
+        this.saleStartDate < this.event.start_date_time ||
+        this.saleEndDate > this.event.end_date_time
+      ) {
+        throw new Error('Ticket sale dates must be within the event dates');
+      }
+    }
+  }
+
+  async getCurrentPrice(): Promise<number | null | string> {
+    const now = new Date();
+    if (now < this.saleStartDate) {
+      return 'Tickets coming soon';
+    }
+
+    if (now > this.saleEndDate) {
+      return 'Tickets sale ended';
+    }
+
+    const currentPhase = this.pricingPhases
+      .filter((phase) => phase.effectiveDate <= now)
+      .sort((a, b) => b.effectiveDate.getTime() - a.effectiveDate.getTime())[0];
+
+    return currentPhase ? currentPhase.price : 'not tickets found';
+  }
 }
