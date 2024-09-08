@@ -7,6 +7,7 @@ import {
   OneToMany,
   BeforeInsert,
   BeforeUpdate,
+  AfterLoad,
 } from 'typeorm';
 import {
   AbstractEntity,
@@ -82,6 +83,28 @@ export class TicketType extends AbstractEntity {
 
   @Column({ type: 'boolean', default: false, nullable: false })
   ageRestriction: boolean;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  private _currentPrice: number | null;
+
+  get currentPrice(): number | null {
+    return this._currentPrice;
+  }
+
+  @AfterLoad()
+  calculateCurrentPrice() {
+    const now = new Date();
+    if (now < this.saleStartDate || now > this.saleEndDate) {
+      this._currentPrice = null;
+      return;
+    }
+
+    const activePhase = this.pricingPhases
+      .filter((phase) => phase.effectiveDate <= now)
+      .sort((a, b) => b.effectiveDate.getTime() - a.effectiveDate.getTime())[0];
+
+    this._currentPrice = activePhase ? activePhase.price : null;
+  }
 
   @BeforeInsert()
   @BeforeUpdate()
