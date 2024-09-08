@@ -1,16 +1,21 @@
-import { AbstractEntity, EventAddress, EventReview } from '@app/common';
+import {
+  AbstractEntity,
+  EventAddress,
+  EventReview,
+  EventsImages,
+  TicketType,
+} from '@app/common';
 import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
-import { EventsImages } from './events-images.entity';
 
 @Entity()
 export class Event extends AbstractEntity {
   @Column()
   event_name: string;
 
-  @Column()
+  @Column({ type: 'timestamp' })
   start_date_time: Date;
 
-  @Column()
+  @Column({ type: 'timestamp' })
   end_date_time: Date;
 
   @Column()
@@ -22,9 +27,11 @@ export class Event extends AbstractEntity {
   @OneToMany(() => EventsImages, (image) => image.event)
   images: EventsImages[];
 
-  @OneToMany(() => EventReview, (review) => review.event)
-  reviews: EventReview[]; // Adding the reviews relationship
+  @OneToMany(() => TicketType, (ticketType) => ticketType.event)
+  ticketTypes: TicketType[];
 
+  @OneToMany(() => EventReview, (review) => review.event)
+  reviews: EventReview[];
   @Column()
   user: string;
 
