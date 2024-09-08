@@ -10,3 +10,7 @@ export * from './events-ticketTypes.entity';
 
 //enums
 export * from './enums';
+
+//validatos
+
+export * from './entity-validators';

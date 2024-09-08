@@ -1,5 +1,10 @@
 import { Entity, Index, Column, ManyToOne, Check } from 'typeorm';
-import { AbstractEntity, TicketCategoryEnum, TicketType } from '@app/common';
+import {
+  AbstractEntity,
+  TicketCategoryEnum,
+  TicketType,
+  TimestampColumn,
+} from '@app/common';
 import { ValidateIf, IsNotEmpty } from 'class-validator';
 
 @Entity()
@@ -7,7 +12,7 @@ import { ValidateIf, IsNotEmpty } from 'class-validator';
 @Check(`"effectiveDate" >= CURRENT_TIMESTAMP`)
 @Check(`("ticketType" <> 'Custom' OR "customPhaseName" IS NOT NULL)`)
 export class TicketPricingPhase extends AbstractEntity {
-  @Column({ type: 'timestamp' })
+  @TimestampColumn()
   effectiveDate: Date;
 
   @Column('decimal', { precision: 10, scale: 2 })

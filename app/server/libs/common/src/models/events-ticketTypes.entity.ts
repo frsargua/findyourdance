@@ -4,6 +4,7 @@ import {
   Event,
   SalesStrategyEnum,
   TicketPricingPhase,
+  TimestampColumn,
 } from '@app/common';
 
 @Entity()
@@ -16,14 +17,14 @@ import {
 export class TicketType extends AbstractEntity {
   @Column({ length: 100 })
   name: string;
-
+  //I think it would be nice to have the typeORM rules be part of an env file, but might be more boiler plate
   @Column({ type: 'text', nullable: false, length: 2000 })
   description: string;
 
-  @Column({ type: 'timestamp', nullable: false })
+  @TimestampColumn()
   saleStartDate: Date;
 
-  @Column({ type: 'timestamp', nullable: false })
+  @TimestampColumn()
   saleEndDate: Date;
 
   @Column({ type: 'integer', default: 0 })
