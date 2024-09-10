@@ -9,28 +9,24 @@ import {
   BeforeUpdate,
   AfterLoad,
 } from 'typeorm';
-import {
-  AbstractEntity,
-  Event,
-  SalesStrategyEnum,
-  TicketPricingPhase,
-  TimestampColumn,
-} from '@app/common';
+import { AbstractEntity, Event, TicketPricingPhase } from '@app/common';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
+import { TimestampColumn } from '../entityValidators/timestampColumn.validator';
+import { SalesStrategyEnum } from './enums/ticket-entity-enums';
 
 @Entity()
 @Index(['event', 'name'], { unique: true })
-@Check(`"saleEndDate" > "saleStartDate"`)
+@Check(`"sale_end_date" > "sale_start_date"`)
 @Check(`"capacity" >= "sold"`)
-@Check(`"maxPerCustomer" <= "capacity"`)
-@Check(`"saleEndDate" > CURRENT_TIMESTAMP`)
-@Check(`"saleStartDate" >= CURRENT_TIMESTAMP`)
+@Check(`"max_per_customer" <= "capacity"`)
+@Check(`"sale_end_date" > CURRENT_TIMESTAMP`)
+@Check(`"sale_start_date" >= CURRENT_TIMESTAMP`)
 export class TicketType extends AbstractEntity {
   @Column({ length: 100 })
   name: string;
   //I think it would be nice to have the typeORM rules be part of an env file, but might be more boiler plate
-  @Column({ type: 'text', nullable: false, length: 2000 })
+  @Column({ type: 'varchar', nullable: false, length: 2000 })
   description: string;
 
   @TimestampColumn()
@@ -70,19 +66,18 @@ export class TicketType extends AbstractEntity {
   @Type(() => TicketPricingPhase)
   pricingPhases: TicketPricingPhase[];
 
-  @Column({ type: 'int', nullable: true })
-  @Check('validForDays IS NULL OR validForDays > 0 or validForDays < 1000')
-  validForDays?: number;
+  @Column({ nullable: true })
+  @Check(
+    'valid_for_days IS NULL OR valid_for_days > 0 or valid_for_days < 1000'
+  )
+  validForDays: number;
 
   @Column({ type: 'boolean', default: true, nullable: false })
   isActive: boolean;
 
   @Column({ type: 'int', default: 10 })
-  @Check('maxPerCustomer > 0 AND maxPerCustomer <= capacity')
+  @Check('max_per_customer > 0 AND max_per_customer <= capacity')
   maxPerCustomer: number;
-
-  @Column({ type: 'boolean', default: false, nullable: false })
-  ageRestriction: boolean;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
   private _currentPrice: number | null;

@@ -8,11 +8,9 @@ export function TimestampColumn(options?: ColumnOptions): PropertyDecorator {
       nullable: false,
       ...options,
     })(target, propertyKey);
-
     IsNotEmpty({
       message: `${String(propertyKey)} is not allowed to be empty`,
     })(target, propertyKey);
-
     IsDate()(target, propertyKey);
   };
 }

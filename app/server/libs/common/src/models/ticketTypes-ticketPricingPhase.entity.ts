@@ -7,18 +7,17 @@ import {
   BeforeUpdate,
   BeforeInsert,
 } from 'typeorm';
-import {
-  AbstractEntity,
-  TicketCategoryEnum,
-  TicketType,
-  TimestampColumn,
-} from '@app/common';
+import { AbstractEntity, TicketType } from '@app/common';
 import { ValidateIf, IsNotEmpty } from 'class-validator';
+import { TicketCategoryEnum } from './enums/ticket-entity-enums';
+import { TimestampColumn } from '../entityValidators/timestampColumn.validator';
 
 @Entity()
 @Index(['ticketType', 'effectiveDate'], { unique: true })
-@Check(`"effectiveDate" >= CURRENT_TIMESTAMP`)
-@Check(`("ticketType" <> 'Custom' OR "customPhaseName" IS NOT NULL)`)
+@Check(`"effective_date" >= CURRENT_TIMESTAMP`)
+@Check(
+  `("phase_category" <> '${TicketCategoryEnum.CUSTOM}' OR "custom_phase_name" IS NOT NULL)`
+)
 export class TicketPricingPhase extends AbstractEntity {
   @TimestampColumn()
   effectiveDate: Date;

@@ -4,8 +4,8 @@ import {
   EventReview,
   EventsImages,
   TicketType,
-  TimestampColumn,
 } from '@app/common';
+import { TimestampColumn } from '../entityValidators/timestampColumn.validator';
 import { IsBoolean, IsNotEmpty, MaxLength } from 'class-validator';
 import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 
@@ -32,7 +32,7 @@ export class Event extends AbstractEntity {
   })
   eventAddress: EventAddress;
 
-  @OneToMany(() => EventsImages, (image) => image.event, { nullable: false })
+  @OneToMany(() => EventsImages, (image) => image.event, { nullable: true })
   images: EventsImages[];
 
   @OneToMany(() => TicketType, (ticketType) => ticketType.event)
@@ -44,6 +44,9 @@ export class Event extends AbstractEntity {
   @Column()
   @IsNotEmpty()
   user: string;
+
+  @Column({ type: 'boolean', default: false, nullable: false })
+  ageRestriction: boolean;
 
   @Column()
   @IsBoolean()

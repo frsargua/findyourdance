@@ -7,6 +7,8 @@ import {
   Event,
   EventReview,
   ReviewMedia,
+  TicketPricingPhase,
+  TicketType,
 } from '@app/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import * as Joi from 'joi';
@@ -26,7 +28,13 @@ import { EventsReviewsRepository } from '../repository/event-reviews.repository'
     DatabaseModule,
     AddressModule,
     ImageModule,
-    TypeOrmModule.forFeature([Event, EventReview, ReviewMedia]),
+    TypeOrmModule.forFeature([
+      Event,
+      TicketType,
+      TicketPricingPhase,
+      EventReview,
+      ReviewMedia,
+    ]),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: './apps/events/.env',
