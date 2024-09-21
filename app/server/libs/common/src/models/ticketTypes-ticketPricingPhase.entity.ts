@@ -6,6 +6,7 @@ import {
   Check,
   BeforeUpdate,
   BeforeInsert,
+  AfterLoad,
 } from 'typeorm';
 import { AbstractEntity, TicketType } from '@app/common';
 import { ValidateIf, IsNotEmpty } from 'class-validator';
@@ -13,8 +14,8 @@ import { TicketCategoryEnum } from './enums/ticket-entity-enums';
 import { TimestampColumn } from '../entityValidators/timestampColumn.validator';
 
 @Entity()
-@Index(['ticketType', 'effectiveDate'], { unique: true })
-@Check(`"effective_date" >= CURRENT_TIMESTAMP`)
+@Index(['ticketType', 'effectiveDate', 'phaseCategory'], { unique: true })
+@Check(`"effective_date" >= CURRENT_DATE`)
 @Check(
   `("phase_category" <> '${TicketCategoryEnum.CUSTOM}' OR "custom_phase_name" IS NOT NULL)`
 )
@@ -31,6 +32,7 @@ export class TicketPricingPhase extends AbstractEntity {
 
   @ManyToOne(() => TicketType, (ticketType) => ticketType.pricingPhases, {
     nullable: false,
+    eager: true,
   })
   ticketType: TicketType;
 
@@ -39,29 +41,40 @@ export class TicketPricingPhase extends AbstractEntity {
   @IsNotEmpty({ message: 'Phase name is required for custom pricing strategy' })
   customPhaseName?: string;
 
-  isActive(date: Date = new Date()): boolean {
-    return this.effectiveDate <= date && date <= this.ticketType.saleEndDate;
+  private _isActive: boolean | null = null;
+
+  @AfterLoad()
+  computeIsActive() {
+    const now = new Date();
+    if (this.ticketType && this.ticketType.saleEndDate) {
+      this._isActive =
+        this.effectiveDate <= now && now <= this.ticketType.saleEndDate;
+    } else {
+      this._isActive = null;
+    }
   }
 
-  getDisplayName(): string {
-    if (this.phaseCategory === TicketCategoryEnum.CUSTOM) {
-      return this.customPhaseName || 'Custom';
-    }
-    return this.phaseCategory;
+  get isActive(): boolean {
+    const now = new Date();
+    return this.effectiveDate <= now && now < this.ticketType.saleEndDate;
   }
 
   @BeforeInsert()
   @BeforeUpdate()
   async validateEffectiveDate() {
     if (this.ticketType) {
-      if (
-        this.effectiveDate < this.ticketType.saleStartDate ||
-        this.effectiveDate > this.ticketType.saleEndDate
-      ) {
+      if (this.effectiveDate >= this.ticketType.saleEndDate) {
         throw new Error(
           'Pricing phase effective date must be within the ticket type sale dates'
         );
       }
+    }
+  }
+
+  @AfterLoad()
+  setCustomPhaseName() {
+    if (this.phaseCategory !== TicketCategoryEnum.CUSTOM) {
+      this.customPhaseName = this.phaseCategory;
     }
   }
 }
