@@ -13,10 +13,12 @@ import {
   ArrayMinSize,
   IsOptional,
   Max,
+  IsNotEmpty,
 } from 'class-validator';
 import { CreateTicketPricingPhaseDto } from './create-ticket-price-phase.dto';
 
 export class CreateTicketTypeDto {
+  @IsNotEmpty()
   @IsString()
   @MaxLength(100)
   name: string;
