@@ -7,7 +7,7 @@ import {
 } from '@app/common';
 import { TimestampColumn } from '../entityValidators/timestampColumn.validator';
 import { IsBoolean, IsNotEmpty, MaxLength } from 'class-validator';
-import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
+import { AfterLoad, Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 
 @Entity()
 export class Event extends AbstractEntity {
@@ -35,10 +35,14 @@ export class Event extends AbstractEntity {
   @OneToMany(() => EventsImages, (image) => image.event, { nullable: true })
   images: EventsImages[];
 
-  @OneToMany(() => TicketType, (ticketType) => ticketType.event)
+  @OneToMany(() => TicketType, (ticketType) => ticketType.event, {
+    cascade: true,
+  })
   ticketTypes: TicketType[];
 
-  @OneToMany(() => EventReview, (review) => review.event)
+  @OneToMany(() => EventReview, (review) => review.event, {
+    cascade: true,
+  })
   reviews: EventReview[];
 
   @Column()
@@ -56,19 +60,59 @@ export class Event extends AbstractEntity {
   @IsBoolean()
   ticketsRequired: boolean;
 
+  private _currentCheapestTicketPrice: number | string | null = null;
+
+  @AfterLoad()
+  async calculateCurrentPrice() {
+    //TODO: Temporary fix to my db being 1 h behind, i will have to find a way to use the timestamp better
+    const now = new Date(new Date().getTime() + 60 * 60 * 1000);
+    if (now > this.end_date_time) {
+      this._currentCheapestTicketPrice = null;
+      return;
+    }
+
+    if (
+      !this.ticketTypes ||
+      this.ticketTypes.length === 0 ||
+      this.ticketsRequired
+    ) {
+      this._currentCheapestTicketPrice = null;
+      return;
+    }
+
+    const activeTickets = this.ticketTypes
+      .filter((phase) => {
+        const result = phase.saleStartDate <= now;
+
+        return result;
+      })
+      .sort((a, b) => b.saleStartDate.getTime() - a.saleStartDate.getTime())[0];
+
+    this._currentCheapestTicketPrice = activeTickets
+      ? await activeTickets.getCurrentPrice()
+      : null;
+  }
+
+  get currentCheapestTicketPrice(): number | null | string {
+    return this._currentCheapestTicketPrice;
+  }
+
   async getCurrentCheapestTicketPrice(): Promise<number | null> {
     if (!this.ticketsRequired) {
       return null;
     }
 
-    const currentPrices = await Promise.all(
-      this.ticketTypes.map((ticket) => ticket.getCurrentPrice())
-    );
+    if (this._currentCheapestTicketPrice === null) {
+      const currentPrices = await Promise.all(
+        this.ticketTypes.map((ticket) => ticket.getCurrentPrice())
+      );
+      const validPrices = currentPrices.filter(
+        (price) => price !== null
+      ) as number[];
+      this._currentCheapestTicketPrice =
+        validPrices.length > 0 ? Math.min(...validPrices) : null;
+    }
 
-    const validPrices = currentPrices.filter(
-      (price) => price !== null
-    ) as number[];
-
-    return validPrices.length > 0 ? Math.min(...validPrices) : null;
+    return this._currentCheapestTicketPrice;
   }
 }

@@ -89,7 +89,12 @@ export class TicketType extends AbstractEntity {
   @AfterLoad()
   calculateCurrentPrice() {
     const now = new Date();
-    if (now < this.saleStartDate || now > this.saleEndDate) {
+    if (now > this.saleEndDate) {
+      this._currentPrice = null;
+      return;
+    }
+
+    if (!this.pricingPhases || this.pricingPhases.length === 0) {
       this._currentPrice = null;
       return;
     }
@@ -97,7 +102,6 @@ export class TicketType extends AbstractEntity {
     const activePhase = this.pricingPhases
       .filter((phase) => phase.effectiveDate <= now)
       .sort((a, b) => b.effectiveDate.getTime() - a.effectiveDate.getTime())[0];
-
     this._currentPrice = activePhase ? activePhase.price : null;
   }
 
@@ -106,7 +110,7 @@ export class TicketType extends AbstractEntity {
   async validateDates() {
     if (this.event) {
       if (
-        this.saleStartDate < this.event.start_date_time ||
+        this.saleStartDate > this.event.end_date_time &&
         this.saleEndDate > this.event.end_date_time
       ) {
         throw new Error('Ticket sale dates must be within the event dates');
@@ -115,19 +119,22 @@ export class TicketType extends AbstractEntity {
   }
 
   async getCurrentPrice(): Promise<number | null | string> {
-    const now = new Date();
+    //TODO: Temporary fix to my db being 1 h behind, i will have to find a way to use the timestamp better
+    const now = new Date(new Date().getTime() + 60 * 60 * 1000);
     if (now < this.saleStartDate) {
       return 'Tickets coming soon';
     }
-
     if (now > this.saleEndDate) {
       return 'Tickets sale ended';
+    }
+
+    if (!this.pricingPhases || this.pricingPhases.length === 0) {
+      return 'No pricing information available';
     }
 
     const currentPhase = this.pricingPhases
       .filter((phase) => phase.effectiveDate <= now)
       .sort((a, b) => b.effectiveDate.getTime() - a.effectiveDate.getTime())[0];
-
-    return currentPhase ? currentPhase.price : 'not tickets found';
+    return currentPhase ? currentPhase.price : 'No active pricing phase found';
   }
 }
