@@ -13,6 +13,7 @@ import { SearchEventsDto } from '../dto/search-events.dto';
 import { ImageService } from './image.service';
 import { UpdateEventPublishedStatusDto } from '../dto/update-event-published-status.dto';
 import { EnableEventOptionsDto } from '../dto/enable-event-optionsDto';
+import { TicketsService } from './tickets.service';
 
 interface UpdateSingleEventOptions {
   enableRelationship: boolean;
@@ -22,6 +23,7 @@ interface UpdateSingleEventOptions {
 export class EventsService {
   constructor(
     private readonly eventsRepository: EventsRepository,
+    private readonly ticketsService: TicketsService,
     private readonly imageService: ImageService,
     private readonly addressService: AddressEventService
   ) {}
@@ -29,16 +31,40 @@ export class EventsService {
   relationsMapping: Record<string, string> = {
     with_address: 'eventAddress',
     with_reviews: 'reviews',
+    with_tickets: 'ticketTypes.pricingPhases',
   };
 
-  async create({ eventAddress, ...createEventDto }: CreateEventDto, user: any) {
+  async create(
+    {
+      eventAddress,
+      ticketsRequired,
+      ticketTypes,
+      ...createEventDto
+    }: CreateEventDto,
+    user: any
+  ) {
     const address = await this.addressService.createAddress(eventAddress);
     const event = this.eventsRepository.create({
       ...createEventDto,
       eventAddress: address,
       user: user.id,
     });
-    return await this.eventsRepository.save(event);
+
+    let savedEvent = await this.eventsRepository.save(event);
+
+    let ticketsCreate;
+    if (ticketsRequired && ticketTypes.length == 1) {
+      // console.log('Evento: ' + JSON.stringify(event));
+      ticketsCreate = await this.ticketsService.createSingleTicket(
+        ticketTypes[0],
+        savedEvent
+      );
+      event.ticketTypes =
+        ticketsCreate?.length > 0 && ticketsCreate ? ticketsCreate : [];
+    }
+
+    savedEvent = await this.eventsRepository.save(event);
+    return savedEvent;
   }
 
   async uploadEventImages(files: Express.Multer.File[]) {

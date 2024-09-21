@@ -22,12 +22,18 @@ import { ImageModule } from './image.module';
 import { ImageService } from '../services/image.service';
 import { EventsReviewService } from '../services/reviews.service';
 import { EventsReviewsRepository } from '../repository/event-reviews.repository';
+import { TicketPhasesService } from '../services/ticketsPhases.service';
+import { TicketsService } from '../services/tickets.service';
+import { TicketsPhasesRepository } from '../repository/ticketsPhases.repository';
+import { TicketsRepository } from '../repository/tickets.repository';
+import { TicketsModule } from './tickets.module';
 
 @Module({
   imports: [
     DatabaseModule,
     AddressModule,
     ImageModule,
+    TicketsModule,
     TypeOrmModule.forFeature([
       Event,
       TicketType,
@@ -67,6 +73,10 @@ import { EventsReviewsRepository } from '../repository/event-reviews.repository'
     EventsReviewService,
     EventsReviewsRepository,
     ImageService,
+    TicketsService,
+    TicketsRepository,
+    TicketPhasesService,
+    TicketsPhasesRepository,
     EventsRepository,
     AddressEventService,
   ],
