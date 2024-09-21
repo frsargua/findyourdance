@@ -12,7 +12,6 @@ import {
 import { CreateAddressDto } from './address.dto';
 import { CreateTicketTypeDto } from './create-ticket.dto';
 import { Type } from 'class-transformer';
-import { TicketType } from '@app/common';
 
 export class CreateEventDto {
   @IsAlphanumeric()
@@ -38,7 +37,7 @@ export class CreateEventDto {
     message: 'Tickets are required when ticketsRequired is true',
   })
   @ValidateNested({ each: true })
-  @Type(() => TicketType)
+  @Type(() => CreateTicketTypeDto)
   ticketTypes: CreateTicketTypeDto[] = [];
 
   @IsBoolean()
