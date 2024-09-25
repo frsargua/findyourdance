@@ -97,7 +97,7 @@ export class Event extends AbstractEntity {
     return this._currentCheapestTicketPrice;
   }
 
-  async getCurrentCheapestTicketPrice(): Promise<number | null> {
+  async getCurrentCheapestTicketPrice(): Promise<number | null | string> {
     if (!this.ticketsRequired) {
       return null;
     }
