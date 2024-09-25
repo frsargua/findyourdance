@@ -60,7 +60,7 @@ export class TicketType extends AbstractEntity {
   @OneToMany(
     () => TicketPricingPhase,
     (priceChange) => priceChange.ticketType,
-    { nullable: false }
+    { nullable: false, cascade: true }
   )
   @ValidateNested({ each: true })
   @Type(() => TicketPricingPhase)
