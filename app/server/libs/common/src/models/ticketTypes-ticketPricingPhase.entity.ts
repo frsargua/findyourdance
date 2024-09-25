@@ -32,6 +32,7 @@ export class TicketPricingPhase extends AbstractEntity {
 
   @ManyToOne(() => TicketType, (ticketType) => ticketType.pricingPhases, {
     nullable: false,
+    onDelete: 'CASCADE',
     eager: true,
   })
   ticketType: TicketType;
