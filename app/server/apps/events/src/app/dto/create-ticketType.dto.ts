@@ -15,7 +15,7 @@ import {
   Max,
   IsNotEmpty,
 } from 'class-validator';
-import { CreateTicketPricingPhaseDto } from './create-ticket-price-phase.dto';
+import { CreateTicketPricingPhaseDto } from './create-ticketPricingPhase.dto';
 
 export class CreateTicketTypeDto {
   @IsNotEmpty()

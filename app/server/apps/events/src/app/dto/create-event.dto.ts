@@ -10,7 +10,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { CreateAddressDto } from './address.dto';
-import { CreateTicketTypeDto } from './create-ticket.dto';
+import { CreateTicketTypeDto } from './create-ticketType.dto';
 import { Type } from 'class-transformer';
 
 export class CreateEventDto {
