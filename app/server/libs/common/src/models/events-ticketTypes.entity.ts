@@ -21,7 +21,7 @@ import { SalesStrategyEnum } from './enums/ticket-entity-enums';
 @Check(`"capacity" >= "sold"`)
 @Check(`"max_per_customer" <= "capacity"`)
 @Check(`"sale_end_date" > CURRENT_TIMESTAMP`)
-@Check(`"sale_start_date" >= CURRENT_TIMESTAMP`)
+// @Check(`"sale_start_date" >= CURRENT_TIMESTAMP`) TODO: Causing errors when updating other fields; ticket this
 export class TicketType extends AbstractEntity {
   @Column({ length: 100 })
   name: string;
@@ -108,6 +108,16 @@ export class TicketType extends AbstractEntity {
   @BeforeInsert()
   @BeforeUpdate()
   async validateDates() {
+    const now = new Date();
+
+    if (this.isActive) {
+      if (now > this.saleEndDate) {
+        throw new Error('Cannot set ticket to active after sale end date');
+      }
+      if (now < this.saleStartDate) {
+        throw new Error('Cannot set ticket to active before sale start date');
+      }
+    }
     if (this.event) {
       if (
         this.saleStartDate > this.event.end_date_time &&
@@ -116,6 +126,10 @@ export class TicketType extends AbstractEntity {
         throw new Error('Ticket sale dates must be within the event dates');
       }
     }
+  }
+
+  canBeActive(currentDate: Date): boolean {
+    return currentDate >= this.saleStartDate && currentDate <= this.saleEndDate;
   }
 
   async getCurrentPrice(): Promise<number | null | string> {
