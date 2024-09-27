@@ -14,15 +14,16 @@ import { JwtAuthGuard } from '@app/common';
 import { EventOwnerGuard } from '../guards/event-owner.guard';
 import { CreateTicketTypeDto } from '../dto/create-ticketType.dto';
 import { UpdateTicketTypeDto } from '../dto/update-ticketType.dto';
+import { ToggleActiveStatusDto } from '../dto/update-ticketType-activeStatus.dto';
 
 @Controller('events/:eventId/tickets')
 @UseGuards(JwtAuthGuard, EventOwnerGuard)
 export class TicketController {
   constructor(private readonly ticketService: TicketsService) {}
 
-  @Get('/all')
-  async listTickets(@Param('eventId') eventId: string) {
-    return await this.ticketService.getAllEventTickets(eventId);
+  @Get()
+  async listTickets(@Param('eventId', ParseUUIDPipe) eventId: string) {
+    return this.ticketService.getAllEventTickets(eventId);
   }
 
   @Get(':ticketId')
@@ -30,20 +31,28 @@ export class TicketController {
     return this.ticketService.getEventTicketById(ticketId);
   }
 
-  @Post('create')
+  @Post()
   async createTicket(
-    @Param('eventId') eventId: string,
+    @Param('eventId', ParseUUIDPipe) eventId: string,
     @Body() createTicketDto: CreateTicketTypeDto
   ) {
     return this.ticketService.createTicket(createTicketDto, eventId);
   }
 
-  @Put('update/:ticketId')
+  @Put(':ticketId')
   async updateTicket(
-    @Param('ticketId') ticketId: string,
+    @Param('ticketId', ParseUUIDPipe) ticketId: string,
     @Body() updateTicketDto: UpdateTicketTypeDto
   ) {
     return this.ticketService.updateEventTicket(ticketId, updateTicketDto);
+  }
+
+  @Put(':ticketId/toggle-status')
+  async toggleActiveStatus(
+    @Param('ticketId', ParseUUIDPipe) ticketId: string,
+    @Body() { status: newActiveStatus }: ToggleActiveStatusDto
+  ) {
+    return this.ticketService.toggleActiveStatus(ticketId, newActiveStatus);
   }
 
   @Delete(':ticketId')

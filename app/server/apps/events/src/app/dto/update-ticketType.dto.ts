@@ -1,4 +1,3 @@
-import { SalesStrategyEnum } from '@app/common';
 import { Type } from 'class-transformer';
 import {
   IsOptional,
@@ -7,7 +6,6 @@ import {
   IsDate,
   IsInt,
   Min,
-  IsEnum,
   IsBoolean,
   ValidateNested,
   Max,
@@ -15,6 +13,7 @@ import {
 } from 'class-validator';
 import { CreateTicketPricingPhaseDto } from './create-ticketPricingPhase.dto';
 import { UpdateTicketPricingPhaseDto } from './update-ticketPricingPhase.dto';
+import { UuidDTO } from './iuuid.dto';
 
 class PricingPhasesUpdateDto {
   @IsOptional()
@@ -31,8 +30,8 @@ class PricingPhasesUpdateDto {
 
   @IsOptional()
   @IsArray()
-  @IsString({ each: true })
-  delete?: string[];
+  @Type(() => UuidDTO)
+  delete?: UuidDTO[];
 }
 
 export class UpdateTicketTypeDto {
@@ -60,10 +59,6 @@ export class UpdateTicketTypeDto {
   @IsInt()
   @Min(0)
   capacity?: number;
-
-  @IsOptional()
-  @IsEnum(SalesStrategyEnum)
-  salesStrategy?: SalesStrategyEnum;
 
   @IsOptional()
   @IsBoolean()

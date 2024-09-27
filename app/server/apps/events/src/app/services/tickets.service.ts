@@ -1,37 +1,91 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Event, TicketType } from '@app/common';
-import { CreateTicketTypeDto } from '../dto/create-ticket.dto';
+import { CreateTicketTypeDto } from '../dto/create-ticketType.dto';
 import { TicketPhasesService } from './ticketsPhases.service';
 import { DataSource, EntityManager } from 'typeorm';
 import { TicketsRepository } from '../repository/tickets.repository';
+import { EventsRepository } from '../repository/events.repository';
+import { UpdateTicketTypeDto } from '../dto/update-ticketType.dto';
 
 @Injectable()
 export class TicketsService {
   constructor(
     private readonly dataSource: DataSource,
     private readonly ticketsRepository: TicketsRepository,
-    private readonly ticketPhasesService: TicketPhasesService
+    private readonly ticketPhasesService: TicketPhasesService,
+    private readonly eventRepository: EventsRepository
   ) {}
 
-  // async createSingleTicket(
-  //   { pricingPhases, ...createTicket }: CreateTicketTypeDto,
-  //   linkedEvent: Event
-  // ): Promise<TicketType[]> {
-  //   const ticketInstance = this.ticketsRepository.create({
-  //     ...createTicket,
-  //     event: linkedEvent,
-  //   });
+  async getAllEventTickets(eventId: string): Promise<TicketType[]> {
+    const tickets = await this.ticketsRepository.findAll({
+      where: { event: { id: eventId } },
+    });
 
-  //   if (pricingPhases.length > 0) {
-  //     const pricingPhasesCreated = await this.ticketPhasesService.create(
-  //       pricingPhases,
-  //       ticketInstance
-  //     );
-  //   }
+    return tickets;
+  }
 
-  //   const savedEvent = await this.ticketsRepository.save(ticketInstance);
-  //   return savedEvent;
-  // }
+  async getEventTicketById(ticketId: string): Promise<TicketType> {
+    const ticket = await this.ticketsRepository.findOneById(ticketId);
+    return ticket;
+  }
+
+  async createTicket(
+    { pricingPhases, ...createTicket }: CreateTicketTypeDto,
+    eventId: string
+  ): Promise<TicketType[]> {
+    return await this.dataSource.transaction(
+      async (transactionalEntityManager: EntityManager) => {
+        try {
+          const linkedEvent = await this.eventRepository.findOneById(eventId);
+
+          if (!linkedEvent) {
+            throw new NotFoundException(`Event with ID "${eventId}" not found`);
+          }
+
+          const ticketInstance = transactionalEntityManager.create(TicketType, {
+            ...createTicket,
+            event: linkedEvent,
+          });
+
+          const savedTicket = await transactionalEntityManager.save(
+            TicketType,
+            ticketInstance
+          );
+
+          if (pricingPhases.length > 0) {
+            await this.ticketPhasesService.create(
+              pricingPhases,
+              savedTicket,
+              transactionalEntityManager
+            );
+          }
+
+          const finalTicket = await transactionalEntityManager.findOne(
+            TicketType,
+            {
+              where: { id: savedTicket.id },
+              relations: ['pricingPhases', 'event'],
+            }
+          );
+
+          if (!finalTicket) {
+            throw new Error('Failed to retrieve the created ticket');
+          }
+
+          return [finalTicket];
+        } catch (error) {
+          throw new Error(
+            `Failed to create ticket: ${error.message}` +
+              JSON.stringify(pricingPhases)
+          );
+        }
+      }
+    );
+  }
 
   async createSingleTicket(
     { pricingPhases, ...createTicket }: CreateTicketTypeDto,
@@ -84,76 +138,112 @@ export class TicketsService {
     );
   }
 
-  // async getSingleEvent(id: string, options?: EnableEventOptionsDto) {
-  //   const relations = this.getRelationsFromOptions(options);
+  async updateEventTicket(
+    ticketId: any,
+    { pricingPhases, ...updateTicketData }: UpdateTicketTypeDto
+  ) {
+    return await this.dataSource.transaction(
+      async (transactionalEntityManager: EntityManager) => {
+        try {
+          const ticketDb = await this.getEventTicketById(ticketId);
 
-  //   return await this.eventsRepository.findOneById(id, relations);
-  // }
+          if (!ticketDb) {
+            throw new NotFoundException(
+              `Ticket with ID "${ticketDb}" not found`
+            );
+          }
 
-  // async switchEventPublishedStatus(
-  //   user: User,
-  //   updateEventDto: UpdateEventPublishedStatusDto
-  // ) {
-  //   const { published: updatingPublished, id } = updateEventDto;
+          // Update ticket data
+          Object.assign(ticketDb, updateTicketData);
+          await transactionalEntityManager.save(ticketDb);
 
-  //   const eventToUpdate = await this.eventsRepository.findOneById(id);
+          // Handle pricing phases
+          if (pricingPhases) {
+            if (pricingPhases.create && pricingPhases.create.length > 0) {
+              await this.ticketPhasesService.create(
+                pricingPhases.create,
+                ticketDb,
+                transactionalEntityManager
+              );
+            }
+            if (pricingPhases.update && pricingPhases.update.length > 0) {
+              await this.ticketPhasesService.update(
+                pricingPhases.update,
+                transactionalEntityManager
+              );
+            }
+            if (pricingPhases.delete && pricingPhases.delete.length > 0) {
+              const arrayOfPricingPhasesToDelete = pricingPhases.delete.map(
+                (phase) => phase.id
+              );
+              await this.ticketPhasesService.delete(
+                arrayOfPricingPhasesToDelete,
+                transactionalEntityManager
+              );
+            }
+          }
 
-  //   if (!eventToUpdate) throw new NotFoundException('Event not found');
+          const updatedTicket = await transactionalEntityManager.findOne(
+            TicketType,
+            {
+              where: { id: ticketId },
+              relations: ['pricingPhases'],
+            }
+          );
 
-  //   await this.validateEventOwnership(eventToUpdate.id, user.id);
+          if (!updatedTicket) {
+            throw new Error('Failed to retrieve the created ticket');
+          }
 
-  //   if (updatingPublished === eventToUpdate.published) {
-  //     console.error(`The publish status is already: ${updatingPublished}`);
-  //     return eventToUpdate;
-  //   }
+          return updatedTicket;
+        } catch (error) {
+          if (error instanceof NotFoundException) {
+            throw error;
+          }
+          throw new Error(`Failed to update ticket: ${error.message}`);
+        }
+      }
+    );
+  }
 
-  //   eventToUpdate.published = updatingPublished;
+  async toggleActiveStatus(
+    ticketId: string,
+    newStatus?: boolean
+  ): Promise<TicketType> {
+    const ticketType = await this.getEventTicketById(ticketId);
 
-  //   return await this.eventsRepository.save(eventToUpdate);
-  // }
+    if (!ticketType) {
+      throw new NotFoundException(`TicketType with ID "${ticketId}" not found`);
+    }
 
-  // async deleteSingleEvent(user: User, id: IdParamDto) {
-  //   const eventToDelete = await this.eventsRepository.findOneById(id);
+    const targetStatus = newStatus ?? !ticketType.isActive;
 
-  //   if (!eventToDelete) throw new Error('Event not found');
+    if (targetStatus === ticketType.isActive) {
+      throw new BadRequestException(
+        'TicketType is already in the requested state'
+      );
+    }
 
-  //   await this.validateEventOwnership(eventToDelete.id, user.id);
+    if (targetStatus && !ticketType.canBeActive(new Date())) {
+      throw new BadRequestException(
+        'Cannot set ticket to active outside of its sale period'
+      );
+    }
 
-  //   return await this.eventsRepository.remove(eventToDelete);
-  // }
+    ticketType.isActive = targetStatus;
 
-  // async deleteUserEvents(user: any) {
-  //   const deletedResults = await this.eventsRepository.deleteAllEventsByUserId(
-  //     user.id
-  //   );
+    try {
+      return await this.ticketsRepository.save(ticketType);
+    } catch (error) {
+      throw new BadRequestException(
+        `Failed to update ticket status: ${error.message}`
+      );
+    }
+  }
 
-  //   return deletedResults;
-  // }
-
-  // private async validateEventOwnership(eventId: string, userId: string) {
-  //   try {
-  //     await this.eventsRepository.findByCondition({
-  //       where: {
-  //         id: eventId,
-  //         user: userId,
-  //       },
-  //     });
-  //   } catch (error) {
-  //     throw new ForbiddenException(
-  //       'Not allowed to update event, not event owner'
-  //     );
-  //   }
-  // }
-
-  // private getRelationsFromOptions(options?: EnableEventOptionsDto): string[] {
-  //   if (!options) return [];
-
-  //   const result = Object.keys(this.relationsMapping)
-  //     .filter((key) => options[key as keyof EnableEventOptionsDto])
-  //     .map((key) => this.relationsMapping[key]);
-
-  //   console.log(result);
-
-  //   return result;
-  // }
+  async deleteEventTicket(ticketId: any) {
+    const deletedResults = await this.getEventTicketById(ticketId);
+    const result = await this.ticketsRepository.remove(deletedResults);
+    return result;
+  }
 }
