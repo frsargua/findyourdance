@@ -15,7 +15,7 @@ import { TimestampColumn } from '../entityValidators/timestampColumn.validator';
 
 @Entity()
 @Index(['ticketType', 'effectiveDate', 'phaseCategory'], { unique: true })
-@Check(`"effective_date" >= CURRENT_DATE`)
+// @Check(`"effective_date" >= CURRENT_DATE`) TODO: Find a way to replace this with an virtual method
 @Check(
   `("phase_category" <> '${TicketCategoryEnum.CUSTOM}' OR "custom_phase_name" IS NOT NULL)`
 )
