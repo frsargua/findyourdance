@@ -23,4 +23,15 @@ export class EnableEventOptionsDto {
   @IsBoolean()
   @IsOptional()
   with_reviews: boolean;
+
+  @Transform(
+    ({ obj }) => {
+      const value = obj.with_tickets;
+      return value === 'false' ? false : value === 'true' ? true : true;
+    },
+    { toClassOnly: true }
+  )
+  @IsBoolean()
+  @IsOptional()
+  with_tickets: boolean;
 }

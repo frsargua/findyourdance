@@ -1,11 +1,17 @@
 import {
+  ArrayMinSize,
   IsAlphanumeric,
+  IsArray,
   IsBoolean,
   IsDateString,
   IsNotEmpty,
   Length,
+  ValidateIf,
+  ValidateNested,
 } from 'class-validator';
 import { CreateAddressDto } from './address.dto';
+import { CreateTicketTypeDto } from './create-ticketType.dto';
+import { Type } from 'class-transformer';
 
 export class CreateEventDto {
   @IsAlphanumeric()
@@ -24,6 +30,21 @@ export class CreateEventDto {
 
   @IsNotEmpty()
   eventAddress: CreateAddressDto;
+
+  @ValidateIf((o) => o.ticketsRequired === true)
+  @IsArray()
+  @ArrayMinSize(1, {
+    message: 'Tickets are required when ticketsRequired is true',
+  })
+  @ValidateNested({ each: true })
+  @Type(() => CreateTicketTypeDto)
+  ticketTypes: CreateTicketTypeDto[] = [];
+
+  @IsBoolean()
+  ticketsRequired: boolean = false;
+
+  @IsBoolean()
+  ageRestriction: boolean;
 
   @IsBoolean()
   published: boolean = false;

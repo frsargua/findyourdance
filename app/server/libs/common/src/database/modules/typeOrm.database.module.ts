@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EnsureDatabaseService } from '../utils/ensure-database.service';
+import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { EnsureDatabaseService } from '../utils/ensure-database.service';
           synchronize: configService.get<boolean>('TYPEORM_SYNCHRONIZE'),
           autoLoadEntities: true,
           keepConnectionAlive: true,
+          namingStrategy: new SnakeNamingStrategy(),
         };
       },
       inject: [ConfigService],

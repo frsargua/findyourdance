@@ -1,32 +1,38 @@
 import { Module } from '@nestjs/common';
 import { EventsController } from '../constrollers/events.controller';
-import { EventsService } from '../services/events.service';
 import {
   AUTH_SERVICE,
   DatabaseModule,
   Event,
   EventReview,
   ReviewMedia,
+  TicketPricingPhase,
+  TicketType,
 } from '@app/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import * as Joi from 'joi';
-import { EventsRepository } from '../repository/events.repository';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { HTTP_PORT } from '../constants/config.constants';
-import { AddressModule } from './address-event.module';
 import { AddressEventService } from '../services/address-event.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ImageModule } from './image.module';
 import { ImageService } from '../services/image.service';
 import { EventsReviewService } from '../services/reviews.service';
 import { EventsReviewsRepository } from '../repository/event-reviews.repository';
+import { EventManagement } from './eventManagement.module';
 
 @Module({
   imports: [
     DatabaseModule,
-    AddressModule,
+    EventManagement,
     ImageModule,
-    TypeOrmModule.forFeature([Event, EventReview, ReviewMedia]),
+    TypeOrmModule.forFeature([
+      Event,
+      TicketType,
+      TicketPricingPhase,
+      EventReview,
+      ReviewMedia,
+    ]),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: './apps/events/.env',
@@ -55,11 +61,9 @@ import { EventsReviewsRepository } from '../repository/event-reviews.repository'
   ],
   controllers: [EventsController],
   providers: [
-    EventsService,
     EventsReviewService,
     EventsReviewsRepository,
     ImageService,
-    EventsRepository,
     AddressEventService,
   ],
 })
