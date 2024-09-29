@@ -1,4 +1,26 @@
 services:
+  postgres-database:
+    container_name: postgres-database
+    image: postgis/postgis:latest
+    environment:
+      POSTGRES_DB: findyourdance
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Fabian123!
+    ports:
+      - '6543:5432'
+    volumes:
+      - ./healthcheck.sh:/usr/local/bin/healthcheck.sh
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'chmod +x /usr/local/bin/healthcheck.sh && /usr/local/bin/healthcheck.sh',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
   auth:
     build:
       context: .
@@ -12,6 +34,10 @@ services:
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
+    depends_on:
+      postgres-database:
+        condition: service_healthy
+
   qr-code-generator:
     build:
       context: .
@@ -25,6 +51,10 @@ services:
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
+    depends_on:
+      postgres-database:
+        condition: service_healthy
+
   address.api:
     build:
       context: .
@@ -38,6 +68,10 @@ services:
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
+    depends_on:
+      postgres-database:
+        condition: service_healthy
+
   events:
     build:
       context: .
@@ -51,19 +85,6 @@ services:
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
-  postgres-database:
-    container_name: postgres-database
-    # build:
-    #   context: .
-    #   dockerfile: ./libs/common/src/database/Dockerfile.postgres
-    image: postgis/postgis:latest
-    environment:
-      POSTGRES_DB: findyourdance
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: Fabian123!
-    ports:
-      - '6543:5432'
-#     volumes:
-#       - postgres_data:/var/lib/postgresql/data
-# volumes:
-#   postgres_data:
+    depends_on:
+      postgres-database:
+        condition: service_healthy
