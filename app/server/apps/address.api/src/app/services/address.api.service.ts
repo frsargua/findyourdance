@@ -3,6 +3,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { Address } from '../types/apitier.types';
+import { Logger } from 'nestjs-pino';
 
 @Injectable()
 export class AddressApiService {
@@ -10,22 +11,45 @@ export class AddressApiService {
 
   constructor(
     private readonly configService: ConfigService,
-    private httpService: HttpService
+    private httpService: HttpService,
+    private logger: Logger
   ) {
     this.apiKey = this.configService.get<string>('GET_ADDRESS_API')!;
+    this.logger.log('AddressApiService: Service initialized');
   }
 
   async retrieveAddressByPostcode(postcode: string) {
     const url = this.generateUrl(this.apiKey, postcode, 'postcodes');
+    this.logger.log(
+      'retrieveAddressByPostcode: Attempting to retrieve addresses',
+      { postcode, url }
+    );
 
     try {
       const response = await firstValueFrom(this.httpService.get(url));
 
-      return response.data.result.addresses.map((address: Address) => {
-        return this.handleAddressResponse(address);
-      });
+      const addresses = response.data.result.addresses.map(
+        (address: Address) => {
+          return this.handleAddressResponse(address);
+        }
+      );
+      this.logger.log(
+        'retrieveAddressByPostcode: Successfully retrieved addresses',
+        { postcode, count: addresses.length }
+      );
+
+      return addresses;
     } catch (error) {
-      console.error('Error fetching data:' + url, error);
+      this.logger.error(
+        'retrieveAddressByPostcode: Failed to fetch addresses',
+        {
+          postcode,
+          apiUrl: url,
+          error: error.message,
+          stack: error.stack,
+        }
+      );
+
       throw new HttpException(
         'Failed to fetch addresses',
         HttpStatus.INTERNAL_SERVER_ERROR
@@ -35,12 +59,27 @@ export class AddressApiService {
 
   async retrieveSingleAddress(uuid: string) {
     const url = this.generateUrl(this.apiKey, uuid, 'udprn');
+    this.logger.log('retrieveSingleAddress: Attempting to retrieve address', {
+      uuid,
+      url,
+    });
 
     try {
       const response = await firstValueFrom(this.httpService.get(url));
-      return this.handleAddressResponse(response.data.result);
+
+      const address = this.handleAddressResponse(response.data.result);
+
+      this.logger.log('retrieveSingleAddress: Successfully retrieved address', {
+        uuid,
+      });
+
+      return address;
     } catch (error) {
-      console.error('Error fetching data:', error);
+      this.logger.error('retrieveSingleAddress: Failed to fetch address', {
+        uuid,
+        error: error.message,
+        stack: error.stack,
+      });
       throw new HttpException(
         'Failed to fetch address',
         HttpStatus.INTERNAL_SERVER_ERROR
@@ -49,6 +88,10 @@ export class AddressApiService {
   }
 
   handleAddressResponse(response: Address) {
+    this.logger.log('handleAddressResponse: Processing address response', {
+      udprn: response.udprn,
+    });
+
     return {
       buildingNumber: response.building_number,
       line_1: response.line_1,
@@ -69,6 +112,11 @@ export class AddressApiService {
     query: string,
     option: 'udprn' | 'postcodes'
   ) {
-    return `https://postcode.apitier.com/v1/${option}/${query}?x-api-key=${apiKey}`;
+    const url = `https://postcode.apitier.com/v1/${option}/${query}?x-api-key=${apiKey}`;
+    this.logger.log('generateUrl: Generated URL for API request', {
+      option,
+      query,
+    });
+    return url;
   }
 }
