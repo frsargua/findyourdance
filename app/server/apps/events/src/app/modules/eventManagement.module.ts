@@ -3,6 +3,7 @@ import {
   TicketPricingPhase,
   Event,
   AUTH_SERVICE,
+  LoggerModule,
 } from '@app/common';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -21,6 +22,7 @@ import { ConfigService } from '@nestjs/config';
   imports: [
     AddressModule,
     ImageModule,
+    LoggerModule,
     TypeOrmModule.forFeature([Event, TicketType, TicketPricingPhase]),
     ClientsModule.registerAsync([
       {
