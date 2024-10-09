@@ -22,8 +22,12 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Post('logout')
-  async logout(@Res({ passthrough: true }) response: Response) {
-    const result = await this.authService.logout(response);
+  async logout(
+    @Res({ passthrough: true }) response: Response,
+    @CurrentUser() user: User
+  ) {
+    //TODO: Look into the option to use an guard to pass the user instead
+    const result = await this.authService.logout(user, response);
     response.send(result);
   }
 
