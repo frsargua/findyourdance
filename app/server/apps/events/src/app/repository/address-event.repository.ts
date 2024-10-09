@@ -1,17 +1,19 @@
 import { EventAddress, BaseAbstractRepostitory } from '@app/common';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
+import { Logger } from 'nestjs-pino';
 import { EntityManager, Repository } from 'typeorm';
 
 @Injectable()
 export class AddressEventRepository extends BaseAbstractRepostitory<EventAddress> {
-  protected logger: Logger = new Logger(AddressEventRepository.name);
+  // protected logger: Logger = new Logger(AddressEventRepository.name);
   constructor(
     @InjectRepository(EventAddress)
     private readonly addressEventRepository: Repository<EventAddress>,
-    @InjectEntityManager() private readonly entityManager: EntityManager
+    @InjectEntityManager() private readonly entityManager: EntityManager,
+    protected logger: Logger
   ) {
-    super(addressEventRepository);
+    super(logger, addressEventRepository);
   }
 
   async updateLocation(

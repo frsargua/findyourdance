@@ -1,17 +1,19 @@
 import { BaseAbstractRepostitory, Event } from '@app/common';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, Repository } from 'typeorm';
 import { SearchEventsDto } from '../dto/search-events.dto';
+import { Logger } from 'nestjs-pino';
 
 @Injectable()
 export class EventsRepository extends BaseAbstractRepostitory<Event> {
-  protected logger: Logger = new Logger(EventsRepository.name);
+  // protected logger: Logger = new Logger(EventsRepository.name);
   constructor(
     @InjectRepository(Event)
-    private readonly eventsRepository: Repository<Event>
+    private readonly eventsRepository: Repository<Event>,
+    protected logger: Logger
   ) {
-    super(eventsRepository);
+    super(logger, eventsRepository);
   }
 
   public async deleteAllEventsByUserId(userId: string): Promise<DeleteResult> {

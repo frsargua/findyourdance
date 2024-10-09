@@ -1,16 +1,18 @@
 import { BaseAbstractRepostitory, EventReview } from '@app/common';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Logger } from 'nestjs-pino';
 import { DeleteResult, Repository } from 'typeorm';
 
 @Injectable()
 export class EventsReviewsRepository extends BaseAbstractRepostitory<EventReview> {
-  protected logger: Logger = new Logger(EventsReviewsRepository.name);
+  // protected logger: Logger = new Logger(EventsReviewsRepository.name);
   constructor(
     @InjectRepository(EventReview)
-    private readonly eventsReviewsRepository: Repository<EventReview>
+    private readonly eventsReviewsRepository: Repository<EventReview>,
+    protected logger: Logger
   ) {
-    super(eventsReviewsRepository);
+    super(logger, eventsReviewsRepository);
   }
 
   public async deleteAllEventReviewsByUserId(
