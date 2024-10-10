@@ -18,7 +18,7 @@ interface MyFindOptions<T> extends FindOneOptions<T> {
   relations?: string[];
 }
 
-export abstract class BaseAbstractRepostitory<T extends HasId>
+export abstract class BaseAbstractRepository<T extends HasId>
   implements BaseInterfaceRepository<T>
 {
   // protected abstract readonly logger: LoggerService;

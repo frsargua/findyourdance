@@ -3,14 +3,14 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { AddressEventRepository } from '../repository/address-event.repository';
+import { EventAddressRepository } from '../repository/event-address.repository';
 import { CreateAddressDto } from '../dto/address.dto';
 import { Logger } from 'nestjs-pino';
 
 @Injectable()
 export class AddressEventService {
   constructor(
-    private readonly addressRepository: AddressEventRepository,
+    private readonly eventAddressRepository: EventAddressRepository,
     protected logger: Logger
   ) {
     this.logger.log('AddressEventService initialized');
@@ -34,15 +34,15 @@ export class AddressEventService {
     this.logger.log('createAddress: Address not found, creating new address');
 
     const { latitude, longitude, ...rest } = addressDto;
-    const newAddress = this.addressRepository.create({
+    const newAddress = this.eventAddressRepository.create({
       ...rest,
       latitude,
       longitude,
     });
 
     this.logger.log('createAddress: Saving new address', { newAddress });
-    const savedAddress = await this.addressRepository.save(newAddress);
-    await this.addressRepository.updateLocation(
+    const savedAddress = await this.eventAddressRepository.save(newAddress);
+    await this.eventAddressRepository.updateLocation(
       savedAddress.id,
       latitude,
       longitude
@@ -57,7 +57,7 @@ export class AddressEventService {
         longitude,
       }
     );
-    const updatedAddress = await this.addressRepository.findOne({
+    const updatedAddress = await this.eventAddressRepository.findOne({
       where: { id: savedAddress.id },
     });
 
@@ -68,7 +68,8 @@ export class AddressEventService {
       throw new NotFoundException('temporary fix for not found address.');
     }
 
-    const newSavedAddress = await this.addressRepository.save(updatedAddress);
+    const newSavedAddress =
+      await this.eventAddressRepository.save(updatedAddress);
 
     this.logger.log('createAddress: Successfully created new address', {
       newSavedAddress,
@@ -84,7 +85,7 @@ export class AddressEventService {
     });
 
     try {
-      const address = await this.addressRepository.findOne({
+      const address = await this.eventAddressRepository.findOne({
         where: {
           uniqueDeliveryPointRef: uniqueDeliveryPointRef,
         },

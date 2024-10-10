@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ImageService } from '../services/image.service';
 import { DatabaseModule, EventsImages, LoggerModule } from '@app/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ImagesRepository } from '../repository/images.repository';
+import { EventImageRepository } from '../repository/event-image.repository';
 
 @Module({
   imports: [
@@ -10,7 +10,7 @@ import { ImagesRepository } from '../repository/images.repository';
     DatabaseModule,
     TypeOrmModule.forFeature([EventsImages]),
   ],
-  providers: [ImageService, ImagesRepository],
-  exports: [ImageService, ImagesRepository],
+  providers: [ImageService, EventImageRepository],
+  exports: [ImageService, EventImageRepository],
 })
 export class ImageModule {}

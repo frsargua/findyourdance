@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { ImageService } from './image.service';
 import { CreateReviewDto } from '../dto/create-review.dto';
-import { EventsReviewsRepository } from '../repository/event-reviews.repository';
+import { EventReviewRepository } from '../repository/event-review.repository';
 import { EventsService } from './events.service';
 import { User } from '@app/common';
 import { UpdateReviewPublishStatusDto } from '../dto/update-review-publish-status.dto';
@@ -16,7 +16,7 @@ import { Logger } from 'nestjs-pino';
 @Injectable()
 export class EventsReviewService {
   constructor(
-    private readonly reviewRepository: EventsReviewsRepository,
+    private readonly eventReviewRepository: EventReviewRepository,
     private readonly imageService: ImageService,
     private readonly eventService: EventsService,
     private readonly logger: Logger
@@ -39,14 +39,14 @@ export class EventsReviewService {
       throw new NotFoundException('Event not found');
     }
 
-    const review = this.reviewRepository.create({
+    const review = this.eventReviewRepository.create({
       ...reviewData,
       reviewer: user.id,
       event, // Associate the review with the event
     });
 
     try {
-      const savedReview = await this.reviewRepository.save(review);
+      const savedReview = await this.eventReviewRepository.save(review);
 
       this.logger.log('create: Review created successfully', {
         reviewId: savedReview.id,
@@ -80,7 +80,7 @@ export class EventsReviewService {
       userId: user.id,
     });
 
-    return await this.reviewRepository.findAll({
+    return await this.eventReviewRepository.findAll({
       where: { reviewer: user.id },
     });
   }
@@ -103,7 +103,8 @@ export class EventsReviewService {
 
     reviewToUpdate.published = reviewNewStatus;
     try {
-      const updatedReview = await this.reviewRepository.save(reviewToUpdate);
+      const updatedReview =
+        await this.eventReviewRepository.save(reviewToUpdate);
 
       this.logger.log(
         'switchEventReviewPublishedStatus: Review status updated successfully',
@@ -131,7 +132,7 @@ export class EventsReviewService {
     });
 
     try {
-      const review = await this.reviewRepository.findOne({
+      const review = await this.eventReviewRepository.findOne({
         where: {
           id: reviewId,
           reviewer: userId,

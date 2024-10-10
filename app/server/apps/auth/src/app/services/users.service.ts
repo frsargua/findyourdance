@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { CreateUserDto } from '../dto/create-user.dt';
-import { UsersRepository } from '../repository/users.repository';
+import { UserRepository } from '../repository/user.repository';
 import { GetUserDto } from '../dto/get-user.dto';
 import { AddressUserService } from './address-user.service';
 import { GenericAddressDto } from '../dto/create-address.dto';
@@ -17,7 +17,7 @@ import { Logger } from 'nestjs-pino';
 @Injectable()
 export class UsersService {
   constructor(
-    private readonly usersRepository: UsersRepository,
+    private readonly userRepository: UserRepository,
     private readonly addressService: AddressUserService,
     protected logger: Logger
   ) {}
@@ -33,12 +33,12 @@ export class UsersService {
       const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
       this.logger.debug('create: Password hashed successfully');
 
-      const user = this.usersRepository.create({
+      const user = this.userRepository.create({
         ...createUserDto,
         password: hashedPassword,
       });
 
-      const savedUser = await this.usersRepository.save(user);
+      const savedUser = await this.userRepository.save(user);
       this.logger.log('create: User created successfully', {
         userId: savedUser.id,
       });
@@ -64,7 +64,7 @@ export class UsersService {
       { email: createUserDto.email }
     );
 
-    const existingUser = await this.usersRepository.findOne({
+    const existingUser = await this.userRepository.findOne({
       where: { email: createUserDto.email },
     });
     if (existingUser) {
@@ -89,7 +89,7 @@ export class UsersService {
         'updateUserAddress: Address created/fetched successfully'
       );
 
-      const userFromDb = await this.usersRepository.findOneById(user.id);
+      const userFromDb = await this.userRepository.findOneById(user.id);
       if (!userFromDb) {
         this.logger.warn('updateUserAddress: User not found', {
           userId: user.id,
@@ -98,7 +98,7 @@ export class UsersService {
       }
 
       userFromDb.userAddress = address;
-      const updatedUser = await this.usersRepository.save(userFromDb);
+      const updatedUser = await this.userRepository.save(userFromDb);
       this.logger.log('updateUserAddress: User address updated successfully', {
         userId: updatedUser.id,
       });
@@ -122,7 +122,7 @@ export class UsersService {
     try {
       this.logger.log('verifyUser: Attempting to verify user', { email });
 
-      const user = await this.usersRepository.findOne({ where: { email } });
+      const user = await this.userRepository.findOne({ where: { email } });
 
       if (!user) {
         this.logger.warn('verifyUser: User not found', { email });
@@ -162,7 +162,7 @@ export class UsersService {
       userId: getUserDto.id,
     });
 
-    const user = await this.usersRepository.findOneById(getUserDto.id);
+    const user = await this.userRepository.findOneById(getUserDto.id);
 
     if (!user) {
       this.logger.warn('getUser: User not found', { userId: getUserDto.id });

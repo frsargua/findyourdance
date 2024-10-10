@@ -8,8 +8,8 @@ import { Event, TicketType } from '@app/common';
 import { CreateTicketTypeDto } from '../dto/create-ticketType.dto';
 import { TicketPhasesService } from './ticketsPhases.service';
 import { DataSource, EntityManager } from 'typeorm';
-import { TicketsRepository } from '../repository/tickets.repository';
-import { EventsRepository } from '../repository/events.repository';
+import { TicketTypeRepository } from '../repository/ticket-type.repository';
+import { EventRepository } from '../repository/events.repository';
 import { UpdateTicketTypeDto } from '../dto/update-ticketType.dto';
 import { Logger } from 'nestjs-pino';
 
@@ -17,9 +17,9 @@ import { Logger } from 'nestjs-pino';
 export class TicketsService {
   constructor(
     private readonly dataSource: DataSource,
-    private readonly ticketsRepository: TicketsRepository,
+    private readonly ticketTypeRepository: TicketTypeRepository,
     private readonly ticketPhasesService: TicketPhasesService,
-    private readonly eventRepository: EventsRepository,
+    private readonly eventRepository: EventRepository,
     private readonly logger: Logger
   ) {
     this.logger.log('TicketsService initialized');
@@ -31,7 +31,7 @@ export class TicketsService {
     });
 
     try {
-      const tickets = await this.ticketsRepository.findAll({
+      const tickets = await this.ticketTypeRepository.findAll({
         where: { event: { id: eventId } },
       });
       this.logger.log('getAllEventTickets: Tickets fetched successfully', {
@@ -52,7 +52,7 @@ export class TicketsService {
     this.logger.log('getEventTicketById: Fetching ticket', { ticketId });
 
     try {
-      const ticket = await this.ticketsRepository.findOneById(ticketId);
+      const ticket = await this.ticketTypeRepository.findOneById(ticketId);
       if (!ticket) {
         this.logger.warn('getEventTicketById: Ticket not found', {
           ticketId,
@@ -338,7 +338,7 @@ export class TicketsService {
     ticketType.isActive = targetStatus;
 
     try {
-      const updatedTicket = await this.ticketsRepository.save(ticketType);
+      const updatedTicket = await this.ticketTypeRepository.save(ticketType);
       this.logger.log(
         'toggleActiveStatus: Ticket status updated successfully',
         { ticketId, newStatus: updatedTicket.isActive }
@@ -364,7 +364,7 @@ export class TicketsService {
     }
 
     try {
-      const result = await this.ticketsRepository.remove(deletedResults);
+      const result = await this.ticketTypeRepository.remove(deletedResults);
       this.logger.log('deleteEventTicket: Ticket deleted successfully', {
         ticketId,
       });

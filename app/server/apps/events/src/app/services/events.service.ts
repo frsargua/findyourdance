@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { EventsRepository } from '../repository/events.repository';
+import { EventRepository } from '../repository/events.repository';
 import { CreateEventDto } from '../dto/create-event.dto';
 import { UpdateEventDto } from '../dto/update-event.dto';
 import { User } from '@app/common';
@@ -23,7 +23,7 @@ interface UpdateSingleEventOptions {
 @Injectable()
 export class EventsService {
   constructor(
-    private readonly eventsRepository: EventsRepository,
+    private readonly eventRepository: EventRepository,
     private readonly ticketsService: TicketsService,
     private readonly imageService: ImageService,
     private readonly addressService: AddressEventService,
@@ -55,14 +55,14 @@ export class EventsService {
     const address = await this.addressService.createAddress(eventAddress);
     this.logger.log('create: Address created/found for event', { address });
 
-    const event = this.eventsRepository.create({
+    const event = this.eventRepository.create({
       ...createEventDto,
       eventAddress: address,
       user: user.id,
     });
 
     this.logger.log('create: Saving event', { event });
-    let savedEvent = await this.eventsRepository.save(event);
+    let savedEvent = await this.eventRepository.save(event);
 
     let ticketsCreate;
     if (ticketsRequired && ticketTypes.length == 1) {
@@ -81,7 +81,7 @@ export class EventsService {
       eventId: savedEvent.id,
     });
 
-    savedEvent = await this.eventsRepository.save(event);
+    savedEvent = await this.eventRepository.save(event);
     return savedEvent;
   }
 
@@ -95,7 +95,7 @@ export class EventsService {
   async getSingleEvent(id: string, options?: EnableEventOptionsDto) {
     this.logger.log('getSingleEvent: Fetching event', { eventId: id, options });
     const relations = this.getRelationsFromOptions(options);
-    return await this.eventsRepository.findOneById(id, relations);
+    return await this.eventRepository.findOneById(id, relations);
   }
 
   async getUserEvents(user: User, options?: EnableEventOptionsDto) {
@@ -104,7 +104,7 @@ export class EventsService {
       options,
     });
     const relations = this.getRelationsFromOptions(options);
-    const events = await this.eventsRepository.findAll({
+    const events = await this.eventRepository.findAll({
       where: { user: user.id },
       relations: relations,
     });
@@ -120,7 +120,7 @@ export class EventsService {
       searchCriteria: searchEventsDto,
     });
     const events =
-      await this.eventsRepository.findEventsWithinRadius(searchEventsDto);
+      await this.eventRepository.findEventsWithinRadius(searchEventsDto);
     this.logger.log('getEventWithinCoordinates: Events found', {
       eventCount: events.length,
     });
@@ -140,10 +140,7 @@ export class EventsService {
     });
 
     const relations = options?.enableRelationship ? ['eventAddress'] : [];
-    const eventToUpdate = await this.eventsRepository.findOneById(
-      id,
-      relations
-    );
+    const eventToUpdate = await this.eventRepository.findOneById(id, relations);
 
     if (!eventToUpdate) {
       this.logger.warn('updateSingleEvent: Event not found', { eventId: id });
@@ -174,7 +171,7 @@ export class EventsService {
       eventId: id,
     });
 
-    return this.eventsRepository.save(eventToUpdate);
+    return this.eventRepository.save(eventToUpdate);
   }
 
   async switchEventPublishedStatus(
@@ -186,7 +183,7 @@ export class EventsService {
       eventId: id,
     });
 
-    const eventToUpdate = await this.eventsRepository.findOneById(id);
+    const eventToUpdate = await this.eventRepository.findOneById(id);
 
     if (!eventToUpdate) {
       this.logger.warn('switchEventPublishedStatus: Event not found', {
@@ -207,7 +204,7 @@ export class EventsService {
 
     eventToUpdate.published = updatingPublished;
 
-    const updatedEvent = await this.eventsRepository.save(eventToUpdate);
+    const updatedEvent = await this.eventRepository.save(eventToUpdate);
     this.logger.log(
       'switchEventPublishedStatus: Event status updated successfully',
       { eventId: id, newStatus: updatingPublished }
@@ -221,7 +218,7 @@ export class EventsService {
       userId: user.id,
     });
 
-    const eventToDelete = await this.eventsRepository.findOneById(id);
+    const eventToDelete = await this.eventRepository.findOneById(id);
 
     if (!eventToDelete) {
       this.logger.warn('deleteSingleEvent: Event not found', { eventId: id });
@@ -229,7 +226,7 @@ export class EventsService {
     }
     await this.validateEventOwnership(eventToDelete.id, user.id);
 
-    const result = await this.eventsRepository.remove(eventToDelete);
+    const result = await this.eventRepository.remove(eventToDelete);
     this.logger.log('deleteSingleEvent: Event deleted successfully', {
       eventId: id,
     });
@@ -242,7 +239,7 @@ export class EventsService {
       { userId: user.id }
     );
 
-    const deletedResults = await this.eventsRepository.deleteAllEventsByUserId(
+    const deletedResults = await this.eventRepository.deleteAllEventsByUserId(
       user.id
     );
 
@@ -260,7 +257,7 @@ export class EventsService {
       userId,
     });
     try {
-      await this.eventsRepository.findByCondition({
+      await this.eventRepository.findByCondition({
         where: {
           id: eventId,
           user: userId,

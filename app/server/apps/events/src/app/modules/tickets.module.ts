@@ -9,7 +9,7 @@ import {
 import { TicketController } from '../constrollers/ticket.controller';
 import { EventManagement } from './eventManagement.module';
 import { TicketsService } from '../services/tickets.service';
-import { EventsRepository } from '../repository/events.repository';
+import { EventRepository } from '../repository/events.repository';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
@@ -20,6 +20,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     TypeOrmModule.forFeature([Event, TicketType, TicketPricingPhase]),
   ],
   controllers: [TicketController],
-  providers: [TicketsService, EventsRepository],
+  providers: [TicketsService, EventRepository],
 })
 export class TicketsModule {}

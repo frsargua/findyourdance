@@ -19,7 +19,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ImageModule } from './image.module';
 import { ImageService } from '../services/image.service';
 import { EventsReviewService } from '../services/reviews.service';
-import { EventsReviewsRepository } from '../repository/event-reviews.repository';
+import { EventReviewRepository } from '../repository/event-review.repository';
 import { EventManagement } from './eventManagement.module';
 
 @Module({
@@ -65,7 +65,7 @@ import { EventManagement } from './eventManagement.module';
   controllers: [EventsController],
   providers: [
     EventsReviewService,
-    EventsReviewsRepository,
+    EventReviewRepository,
     ImageService,
     AddressEventService,
   ],

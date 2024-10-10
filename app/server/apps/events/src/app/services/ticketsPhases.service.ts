@@ -7,7 +7,7 @@ import {
 import { TicketPricingPhase, TicketType } from '@app/common';
 import { CreateTicketPricingPhaseDto } from '../dto/create-ticketPricingPhase.dto';
 import { EntityManager, In } from 'typeorm';
-import { TicketsPhasesRepository } from '../repository/ticketsPhases.repository';
+import { TicketPricingPhaseRepository } from '../repository/ticket-pricing-phase.repository';
 import { UpdateTicketPricingPhaseDto } from '../dto/update-ticketPricingPhase.dto';
 import { UuidDTO } from '../dto/iuuid.dto';
 import { Logger } from 'nestjs-pino';
@@ -15,7 +15,7 @@ import { Logger } from 'nestjs-pino';
 @Injectable()
 export class TicketPhasesService {
   constructor(
-    private readonly ticketPhasesRepository: TicketsPhasesRepository,
+    private readonly ticketPricingPhaseRepository: TicketPricingPhaseRepository,
     private readonly logger: Logger
   ) {
     this.logger.log('TicketPhasesService initialized');
@@ -77,7 +77,7 @@ export class TicketPhasesService {
       throw new ForbiddenException('No valid IDs provided for update');
     }
 
-    const existingPhases = await this.ticketPhasesRepository.findAll({
+    const existingPhases = await this.ticketPricingPhaseRepository.findAll({
       where: { id: In(ids) },
     });
 

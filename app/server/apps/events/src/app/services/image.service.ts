@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as AWS from 'aws-sdk';
-import { ImagesRepository } from '../repository/images.repository';
+import { EventImageRepository } from '../repository/event-image.repository';
 import { CreateEventImageDto } from '../dto/create-image.dto';
 import { Logger } from 'nestjs-pino';
 
@@ -12,7 +12,7 @@ export class ImageService {
 
   constructor(
     private readonly configService: ConfigService,
-    private readonly imagesRepository: ImagesRepository,
+    private readonly eventImageRepository: EventImageRepository,
     private readonly logger: Logger
   ) {
     const bucketName = this.configService.get<string>('AWS_BUCKET_NAME');
@@ -51,9 +51,9 @@ export class ImageService {
   async create(createEventImageDto: CreateEventImageDto) {
     this.logger.log('create: Creating new image', { dto: createEventImageDto });
 
-    const image = await this.imagesRepository.create(createEventImageDto);
+    const image = await this.eventImageRepository.create(createEventImageDto);
 
-    const savedImage = await this.imagesRepository.save(image);
+    const savedImage = await this.eventImageRepository.save(image);
 
     this.logger.log('create: Image saved successfully', {
       imageId: savedImage.id,
