@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { Event, TicketType } from '@app/common';
@@ -10,6 +11,7 @@ import { DataSource, EntityManager } from 'typeorm';
 import { TicketsRepository } from '../repository/tickets.repository';
 import { EventsRepository } from '../repository/events.repository';
 import { UpdateTicketTypeDto } from '../dto/update-ticketType.dto';
+import { Logger } from 'nestjs-pino';
 
 @Injectable()
 export class TicketsService {
@@ -17,32 +19,74 @@ export class TicketsService {
     private readonly dataSource: DataSource,
     private readonly ticketsRepository: TicketsRepository,
     private readonly ticketPhasesService: TicketPhasesService,
-    private readonly eventRepository: EventsRepository
-  ) {}
+    private readonly eventRepository: EventsRepository,
+    private readonly logger: Logger
+  ) {
+    this.logger.log('TicketsService initialized');
+  }
 
   async getAllEventTickets(eventId: string): Promise<TicketType[]> {
-    const tickets = await this.ticketsRepository.findAll({
-      where: { event: { id: eventId } },
+    this.logger.log('getAllEventTickets: Fetching all tickets for event', {
+      eventId,
     });
 
-    return tickets;
+    try {
+      const tickets = await this.ticketsRepository.findAll({
+        where: { event: { id: eventId } },
+      });
+      this.logger.log('getAllEventTickets: Tickets fetched successfully', {
+        eventId,
+        ticketCount: tickets.length,
+      });
+      return tickets;
+    } catch (error) {
+      this.logger.error('getAllEventTickets: Failed to fetch tickets', {
+        eventId,
+        error: error.message,
+      });
+      throw error;
+    }
   }
 
   async getEventTicketById(ticketId: string): Promise<TicketType> {
-    const ticket = await this.ticketsRepository.findOneById(ticketId);
-    return ticket;
+    this.logger.log('getEventTicketById: Fetching ticket', { ticketId });
+
+    try {
+      const ticket = await this.ticketsRepository.findOneById(ticketId);
+      if (!ticket) {
+        this.logger.warn('getEventTicketById: Ticket not found', {
+          ticketId,
+        });
+        throw new NotFoundException('Ticket was not able to be fetched');
+      }
+      return ticket;
+    } catch (error) {
+      this.logger.error('getEventTicketById: Failed to fetch ticket', {
+        ticketId,
+        error: error.message,
+      });
+      throw error;
+    }
   }
 
   async createTicket(
     { pricingPhases, ...createTicket }: CreateTicketTypeDto,
     eventId: string
   ): Promise<TicketType[]> {
+    this.logger.log('createTicket: Creating new ticket', {
+      eventId,
+      createTicket,
+    });
+
     return await this.dataSource.transaction(
       async (transactionalEntityManager: EntityManager) => {
         try {
           const linkedEvent = await this.eventRepository.findOneById(eventId);
 
           if (!linkedEvent) {
+            this.logger.warn('createTicket: Event not found', {
+              eventId,
+            });
             throw new NotFoundException(`Event with ID "${eventId}" not found`);
           }
 
@@ -56,7 +100,16 @@ export class TicketsService {
             ticketInstance
           );
 
+          this.logger.log('createTicket: Ticket saved', {
+            ticketId: savedTicket.id,
+          });
+
           if (pricingPhases.length > 0) {
+            this.logger.log('createTicket: Creating pricing phases', {
+              ticketId: savedTicket.id,
+              phaseCount: pricingPhases.length,
+            });
+
             await this.ticketPhasesService.create(
               pricingPhases,
               savedTicket,
@@ -73,12 +126,26 @@ export class TicketsService {
           );
 
           if (!finalTicket) {
+            this.logger.error(
+              'createTicket: Failed to retrieve the created ticket',
+              { ticketId: savedTicket.id }
+            );
+
             throw new Error('Failed to retrieve the created ticket');
           }
 
+          this.logger.log('createTicket: Ticket created successfully', {
+            ticketId: finalTicket.id,
+          });
+
           return [finalTicket];
         } catch (error) {
-          throw new Error(
+          this.logger.error('createTicket: Failed to create ticket', {
+            error: error.message,
+            pricingPhases: JSON.stringify(pricingPhases),
+          });
+
+          throw new InternalServerErrorException(
             `Failed to create ticket: ${error.message}` +
               JSON.stringify(pricingPhases)
           );
@@ -144,22 +211,31 @@ export class TicketsService {
   ) {
     return await this.dataSource.transaction(
       async (transactionalEntityManager: EntityManager) => {
+        const ticketDb = await this.getEventTicketById(ticketId);
+
+        if (!ticketDb) {
+          this.logger.warn('updateEventTicket: Ticket not found', { ticketId });
+          throw new NotFoundException(`Ticket with ID "${ticketId}" not found`);
+        }
+
         try {
-          const ticketDb = await this.getEventTicketById(ticketId);
-
-          if (!ticketDb) {
-            throw new NotFoundException(
-              `Ticket with ID "${ticketDb}" not found`
-            );
-          }
-
           // Update ticket data
           Object.assign(ticketDb, updateTicketData);
           await transactionalEntityManager.save(ticketDb);
+          this.logger.log('updateEventTicket: Ticket data updated', {
+            ticketId,
+          });
 
           // Handle pricing phases
           if (pricingPhases) {
             if (pricingPhases.create && pricingPhases.create.length > 0) {
+              this.logger.log(
+                'updateEventTicket: Creating new pricing phases',
+                {
+                  ticketId,
+                  newPhasesCount: pricingPhases.create.length,
+                }
+              );
               await this.ticketPhasesService.create(
                 pricingPhases.create,
                 ticketDb,
@@ -167,12 +243,20 @@ export class TicketsService {
               );
             }
             if (pricingPhases.update && pricingPhases.update.length > 0) {
+              this.logger.log('updateEventTicket: Updating pricing phases', {
+                ticketId,
+                updatedPhasesCount: pricingPhases.update.length,
+              });
               await this.ticketPhasesService.update(
                 pricingPhases.update,
                 transactionalEntityManager
               );
             }
             if (pricingPhases.delete && pricingPhases.delete.length > 0) {
+              this.logger.log('updateEventTicket: Deleting pricing phases', {
+                ticketId,
+                deletedPhasesCount: pricingPhases.delete.length,
+              });
               const arrayOfPricingPhasesToDelete = pricingPhases.delete.map(
                 (phase) => phase.id
               );
@@ -192,15 +276,22 @@ export class TicketsService {
           );
 
           if (!updatedTicket) {
-            throw new Error('Failed to retrieve the created ticket');
+            this.logger.error(
+              'updateEventTicket: Failed to retrieve the updated ticket',
+              { ticketId }
+            );
+            throw new Error('Failed to retrieve the updated ticket');
           }
+
+          this.logger.log('updateEventTicket: Ticket updated successfully', {
+            ticketId,
+          });
 
           return updatedTicket;
         } catch (error) {
-          if (error instanceof NotFoundException) {
-            throw error;
-          }
-          throw new Error(`Failed to update ticket: ${error.message}`);
+          throw new InternalServerErrorException(
+            `Failed to update ticket: ${error.message}`
+          );
         }
       }
     );
@@ -213,18 +304,32 @@ export class TicketsService {
     const ticketType = await this.getEventTicketById(ticketId);
 
     if (!ticketType) {
+      this.logger.warn('toggleActiveStatus: Ticket not found', {
+        ticketId,
+      });
+
       throw new NotFoundException(`TicketType with ID "${ticketId}" not found`);
     }
 
     const targetStatus = newStatus ?? !ticketType.isActive;
 
     if (targetStatus === ticketType.isActive) {
+      this.logger.warn(
+        'toggleActiveStatus: Ticket is already in the requested state',
+        { ticketId, currentStatus: ticketType.isActive }
+      );
+
       throw new BadRequestException(
         'TicketType is already in the requested state'
       );
     }
 
     if (targetStatus && !ticketType.canBeActive(new Date())) {
+      this.logger.warn(
+        'toggleActiveStatus: Cannot set ticket to active outside of its sale period',
+        { ticketId }
+      );
+
       throw new BadRequestException(
         'Cannot set ticket to active outside of its sale period'
       );
@@ -233,8 +338,17 @@ export class TicketsService {
     ticketType.isActive = targetStatus;
 
     try {
-      return await this.ticketsRepository.save(ticketType);
+      const updatedTicket = await this.ticketsRepository.save(ticketType);
+      this.logger.log(
+        'toggleActiveStatus: Ticket status updated successfully',
+        { ticketId, newStatus: updatedTicket.isActive }
+      );
+      return updatedTicket;
     } catch (error) {
+      this.logger.error('toggleActiveStatus: Failed to update ticket status', {
+        ticketId,
+        error: error.message,
+      });
       throw new BadRequestException(
         `Failed to update ticket status: ${error.message}`
       );
@@ -242,8 +356,27 @@ export class TicketsService {
   }
 
   async deleteEventTicket(ticketId: any) {
+    this.logger.log('deleteEventTicket: Deleting ticket', { ticketId });
     const deletedResults = await this.getEventTicketById(ticketId);
-    const result = await this.ticketsRepository.remove(deletedResults);
-    return result;
+    if (!deletedResults) {
+      this.logger.warn('deleteEventTicket: Ticket not found', { ticketId });
+      throw new NotFoundException(`Ticket with ID "${ticketId}" not found`);
+    }
+
+    try {
+      const result = await this.ticketsRepository.remove(deletedResults);
+      this.logger.log('deleteEventTicket: Ticket deleted successfully', {
+        ticketId,
+      });
+      return result;
+    } catch (error) {
+      this.logger.error('deleteEventTicket: Failed to delete ticket', {
+        ticketId,
+        error: error.message,
+      });
+      throw new InternalServerErrorException(
+        `Failed to delete ticket with Id:${ticketId}`
+      );
+    }
   }
 }
