@@ -21,15 +21,6 @@ interface MyFindOptions<T> extends FindOneOptions<T> {
 export abstract class BaseAbstractRepository<T extends HasId>
   implements BaseInterfaceRepository<T>
 {
-  // protected abstract readonly logger: LoggerService;
-  // private entity: Repository<T>;
-  // protected constructor(
-  //   @Inject(Logger) logger: LoggerService,
-  //   entity: Repository<T>
-  // ) {
-  //   this.entity = entity;
-  // }
-
   protected constructor(
     protected readonly logger: Logger,
     protected readonly entity: Repository<T>
@@ -39,26 +30,26 @@ export abstract class BaseAbstractRepository<T extends HasId>
     try {
       return await this.entity.save(data);
     } catch (error) {
-      this.logger.error(
-        `Error saving entity: ${JSON.stringify(data)}`,
-        error.stack
-      );
+      this.logger.error('Error saving entity', { data, error });
       throw new InternalServerErrorException('Failed to save the entity', {
         cause: error,
       });
     }
   }
 
-  public async saveMany(data: DeepPartial<T>[]): Promise<T[]> {
-    try {
-      return await this.entity.save(data);
-    } catch (error) {
-      this.logger.error('Error saving entities', error.stack);
-      throw new InternalServerErrorException('Failed to save the entities', {
-        cause: error,
-      });
-    }
-  }
+  // public async saveMany(data: DeepPartial<T>[]): Promise<T[]> {
+  //   try {
+  //     return await this.entity.save(data);
+  //   } catch (error) {
+  //     this.logger.error('Error saving entities', {
+  //       error: error.message,
+  //       stack: error.stack,
+  //     });
+  //     throw new InternalServerErrorException('Failed to save the entities', {
+  //       cause: error,
+  //     });
+  //   }
+  // }
 
   public create(data: DeepPartial<T>): T {
     return this.entity.create(data);
@@ -158,7 +149,7 @@ export abstract class BaseAbstractRepository<T extends HasId>
     }
   }
 
-  public async removeAll(data: T[]): Promise<T[]> {
+  public async removeMany(data: T[]): Promise<T[]> {
     try {
       return await this.entity.remove(data);
     } catch (error) {
@@ -205,7 +196,7 @@ export abstract class BaseAbstractRepository<T extends HasId>
     }
   }
 
-  public async getEntity() {
+  public getEntity(): Repository<T> {
     return this.entity;
   }
 
