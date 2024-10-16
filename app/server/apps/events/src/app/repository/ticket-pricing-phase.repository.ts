@@ -7,8 +7,8 @@ import { Repository } from 'typeorm';
 @Injectable()
 export class TicketPricingPhaseRepository extends BaseAbstractRepository<TicketPricingPhase> {
   constructor(
-    @InjectRepository(TicketPricingPhase)
     protected logger: Logger,
+    @InjectRepository(TicketPricingPhase)
     private readonly ticketPricingPhaseRepository: Repository<TicketPricingPhase>
   ) {
     super(logger, ticketPricingPhaseRepository);

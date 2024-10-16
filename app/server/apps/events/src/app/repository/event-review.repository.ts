@@ -7,8 +7,8 @@ import { DeleteResult, Repository } from 'typeorm';
 @Injectable()
 export class EventReviewRepository extends BaseAbstractRepository<EventReview> {
   constructor(
-    @InjectRepository(EventReview)
     protected logger: Logger,
+    @InjectRepository(EventReview)
     private readonly eventsReviewsRepository: Repository<EventReview>
   ) {
     super(logger, eventsReviewsRepository);
