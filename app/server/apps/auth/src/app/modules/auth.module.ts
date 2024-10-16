@@ -7,6 +7,7 @@ import {
   HTTP_PORT,
   JWT_EXPIRATION,
   JWT_SECRET,
+  NODE_ENV,
   TCP_PORT,
 } from '../constants/config.constants';
 import { UsersModule } from './users.module';
@@ -26,6 +27,7 @@ import { LoggerModule } from '@app/common';
         [JWT_EXPIRATION]: Joi.string().required(),
         [HTTP_PORT]: Joi.number().required(),
         [TCP_PORT]: Joi.number().required(),
+        [NODE_ENV]: Joi.boolean().required(),
       }),
     }),
     JwtModule.registerAsync({
