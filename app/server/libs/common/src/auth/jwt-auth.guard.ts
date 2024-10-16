@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, Inject } from '@nestjs/common';
 import { Observable, catchError, map, of, tap } from 'rxjs';
-import { AUTH_SERVICE } from '../constants/services';
+import { AUTH_COOKIE_NAME, AUTH_SERVICE } from '../constants/services';
 import { ClientProxy } from '@nestjs/microservices';
 import { Logger } from 'nestjs-pino';
 
@@ -14,8 +14,8 @@ export class JwtAuthGuard implements CanActivate {
     context: ExecutionContext
   ): boolean | Promise<boolean> | Observable<boolean> {
     const jwt =
-      context.switchToHttp().getRequest().cookies?.Authentication ||
-      context.switchToHttp().getRequest().headers?.authentication;
+      context.switchToHttp().getRequest().cookies?.[AUTH_COOKIE_NAME] ||
+      context.switchToHttp().getRequest().headers?.[AUTH_COOKIE_NAME];
 
     if (!jwt) {
       this.logger.warn(`Token not found`);

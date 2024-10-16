@@ -29,10 +29,10 @@ export class UsersService {
 
     await this.validateCreateUserDto(createUserDto);
 
-    try {
-      const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-      this.logger.debug('create: Password hashed successfully');
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 12);
+    this.logger.debug('create: Password hashed successfully');
 
+    try {
       const user = this.userRepository.create({
         ...createUserDto,
         password: hashedPassword,
@@ -49,9 +49,6 @@ export class UsersService {
         error: error instanceof Error ? error.message : 'Unknown error',
       });
 
-      if (error instanceof ConflictException) {
-        throw error; // Re-throw ConflictException
-      }
       throw new InternalServerErrorException(
         'An error occurred while creating the user'
       );
@@ -71,11 +68,10 @@ export class UsersService {
       this.logger.warn('validateCreateUserDto: Email already exists', {
         email: createUserDto.email,
       });
-
       throw new ConflictException('Email already exists');
+    } else {
+      this.logger.debug('validateCreateUserDto: Email is unique');
     }
-
-    this.logger.debug('validateCreateUserDto: Email is unique');
   }
 
   async updateUserAddress(user: User, userAddress: GenericAddressDto) {
@@ -118,43 +114,27 @@ export class UsersService {
     }
   }
 
-  async verifyUser(email: string, password: string) {
-    try {
-      this.logger.log('verifyUser: Attempting to verify user', { email });
+  async verifyUser(email: string, password: string): Promise<User> {
+    this.logger.log('verifyUser: Attempting to verify user');
 
-      const user = await this.userRepository.findOne({ where: { email } });
+    const user = await this.userRepository.findOne({ where: { email } });
 
-      if (!user) {
-        this.logger.warn('verifyUser: User not found', { email });
-        throw new NotFoundException('User not found with credentials provided');
-      }
-
-      const passwordIsValid = await bcrypt.compare(password, user.password);
-
-      if (!passwordIsValid) {
-        this.logger.log('verifyUser: Attempting to verify user', { email });
-        throw new UnauthorizedException('Credentials are not valid');
-      }
-
-      this.logger.log('verifyUser: User verified successfully', {
-        userId: user.id,
-      });
-      return user;
-    } catch (error) {
-      this.logger.error('verifyUser: Failed to verify user', {
-        email,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      if (
-        error instanceof NotFoundException ||
-        error instanceof UnauthorizedException
-      ) {
-        throw error; // Re-throw these specific exceptions
-      }
-      throw new InternalServerErrorException(
-        'An error occurred while verifying the user'
-      );
+    if (!user) {
+      this.logger.warn('verifyUser: Invalid credentials');
+      throw new UnauthorizedException('Invalid credentials');
     }
+
+    const passwordIsValid = await bcrypt.compare(password, user.password);
+
+    if (!passwordIsValid) {
+      this.logger.warn('verifyUser: Invalid credentials');
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    this.logger.log('verifyUser: User verified successfully', {
+      userId: user.id,
+    });
+    return user;
   }
 
   async getUser(getUserDto: GetUserDto) {
