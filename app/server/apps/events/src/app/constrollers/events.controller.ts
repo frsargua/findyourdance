@@ -129,7 +129,7 @@ export class EventsController {
   @UseGuards(JwtAuthGuard)
   @Delete('id')
   async deleteSingleEvent(
-    @Param('id') id: IdParamDto,
+    @Param('id') id: IdParamDto['id'],
     @CurrentUser() user: User
   ) {
     return await this.eventsService.deleteSingleEvent(user, id);
