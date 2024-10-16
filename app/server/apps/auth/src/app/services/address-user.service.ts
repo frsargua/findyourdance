@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { AddressUserRepository } from '../repository/address-user.repository';
 import { GenericAddressDto } from '../dto/create-address.dto';
 import { Logger } from 'nestjs-pino';
@@ -8,43 +12,56 @@ import { AddressUser } from '@app/common';
 export class AddressUserService {
   constructor(
     private readonly addressRepository: AddressUserRepository,
-    protected logger: Logger
+    private logger: Logger
   ) {}
 
   async createAddress(addressDto: GenericAddressDto): Promise<AddressUser> {
     const { uniqueDeliveryPointRef } = addressDto;
 
+    if (!uniqueDeliveryPointRef) {
+      this.logger.error('UniqueDeliveryPointRef is missing');
+      throw new BadRequestException('UniqueDeliveryPointRef is required');
+    }
+
     this.logger.log('Attempting to create or fetch address', {
       uniqueDeliveryPointRef,
     });
 
-    let address = await this.getAddress(addressDto);
+    const existingAddress = await this.getAddress(uniqueDeliveryPointRef);
 
-    if (address) {
+    if (existingAddress) {
       this.logger.log('Address already exists, returning from database', {
-        addressId: address.id,
+        addressId: existingAddress.id,
       });
-      return address;
+      return existingAddress;
     }
 
     try {
-      address = await this.addressRepository.save(addressDto);
+      const newAddress = await this.addressRepository.save(addressDto);
       this.logger.log('Successfully saved new address', {
-        addressId: address.id,
+        addressId: newAddress.id,
       });
-      return address;
+      return newAddress;
     } catch (error) {
       this.logger.error('Failed to save new address', {
         error: error.message,
         stack: error.stack,
         uniqueDeliveryPointRef,
       });
-      throw new InternalServerErrorException('Failed to save new address');
+
+      throw new InternalServerErrorException('Failed to save new address', {
+        cause: error,
+      });
     }
   }
 
-  async getAddress(addressDto: GenericAddressDto): Promise<AddressUser | null> {
-    const { uniqueDeliveryPointRef } = addressDto;
+  async getAddress(
+    uniqueDeliveryPointRef: string
+  ): Promise<AddressUser | null> {
+    if (!uniqueDeliveryPointRef) {
+      this.logger.error('UniqueDeliveryPointRef is missing');
+      throw new BadRequestException('UniqueDeliveryPointRef is required');
+    }
 
     this.logger.log('Fetching address from database', {
       uniqueDeliveryPointRef,
