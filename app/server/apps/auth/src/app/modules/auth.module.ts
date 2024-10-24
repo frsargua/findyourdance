@@ -27,7 +27,7 @@ import { LoggerModule } from '@app/common';
         [JWT_EXPIRATION]: Joi.string().required(),
         [HTTP_PORT]: Joi.number().required(),
         [TCP_PORT]: Joi.number().required(),
-        [NODE_ENV]: Joi.boolean().required(),
+        [NODE_ENV]: Joi.string().required(),
       }),
     }),
     JwtModule.registerAsync({

@@ -73,6 +73,9 @@ export class TicketType extends AbstractEntity {
   validForDays: number;
 
   @Column({ type: 'boolean', default: true, nullable: false })
+  isPublishable: boolean;
+
+  @Column({ type: 'boolean', default: true, nullable: false })
   isActive: boolean;
 
   @Column({ type: 'int', default: 10 })
@@ -111,11 +114,13 @@ export class TicketType extends AbstractEntity {
     const now = new Date();
 
     if (this.isActive) {
-      if (now > this.saleEndDate) {
-        throw new Error('Cannot set ticket to active after sale end date');
+      if (now.getTime() > this.saleEndDate.getTime()) {
+        throw new Error('Cannot set ticket end date to be in the past');
       }
-      if (now < this.saleStartDate) {
-        throw new Error('Cannot set ticket to active before sale start date');
+      if (now.getTime() < this.saleStartDate.getTime()) {
+        throw new Error(
+          `Cannot set ticket to active before current time/date. Now: ${now} and ticket: ${this.saleStartDate}`
+        );
       }
     }
     if (this.event) {
@@ -134,10 +139,13 @@ export class TicketType extends AbstractEntity {
 
   async getCurrentPrice(): Promise<number | null | string> {
     //TODO: Temporary fix to my db being 1 h behind, i will have to find a way to use the timestamp better
-    const now = new Date(new Date().getTime() + 60 * 60 * 1000);
+    // const now = new Date(new Date().getTime() + 60 * 60 * 1000);
+
+    const now = new Date(); // Current UTC timestamp
     if (now < this.saleStartDate) {
       return 'Tickets coming soon';
     }
+
     if (now > this.saleEndDate) {
       return 'Tickets sale ended';
     }

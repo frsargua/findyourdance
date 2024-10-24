@@ -57,8 +57,13 @@ export class CreateTicketTypeDto {
   @Max(999)
   validForDays?: number;
 
+  @IsOptional()
   @IsBoolean()
   isActive: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  isPublishable: boolean;
 
   @IsInt()
   @Min(1)
