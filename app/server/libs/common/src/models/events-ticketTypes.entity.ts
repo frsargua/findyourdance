@@ -2,7 +2,6 @@ import {
   Entity,
   Index,
   Column,
-  Check,
   ManyToOne,
   OneToMany,
   BeforeInsert,
@@ -11,36 +10,55 @@ import {
 } from 'typeorm';
 import { AbstractEntity, Event, TicketPricingPhase } from '@app/common';
 import { Type } from 'class-transformer';
-import { ValidateNested } from 'class-validator';
+import {
+  IsBoolean,
+  IsInt,
+  IsNotEmpty,
+  Max,
+  MaxLength,
+  Min,
+  MinDate,
+  ValidateNested,
+} from 'class-validator';
 import { TimestampColumn } from '../entityValidators/timestampColumn.validator';
 import { SalesStrategyEnum } from './enums/ticket-entity-enums';
+import { isAfter, isBefore, isEqual } from 'date-fns';
+import { BadRequestException } from '@nestjs/common';
 
 @Entity()
 @Index(['event', 'name'], { unique: true })
-@Check(`"sale_end_date" > "sale_start_date"`)
-@Check(`"capacity" >= "sold"`)
-@Check(`"max_per_customer" <= "capacity"`)
-@Check(`"sale_end_date" > CURRENT_TIMESTAMP`)
-// @Check(`"sale_start_date" >= CURRENT_TIMESTAMP`) TODO: Causing errors when updating other fields; ticket this
 export class TicketType extends AbstractEntity {
-  @Column({ length: 100 })
-  name: string;
   //I think it would be nice to have the typeORM rules be part of an env file, but might be more boiler plate
+  @Column({ length: 100 })
+  @IsNotEmpty()
+  @MaxLength(100)
+  name: string;
+
   @Column({ type: 'varchar', nullable: false, length: 2000 })
+  @IsNotEmpty()
+  @MaxLength(2000)
   description: string;
 
   @TimestampColumn()
+  @MinDate(() => new Date(), {
+    message: 'Sale start date must not be in the past.',
+  })
   saleStartDate: Date;
 
   @TimestampColumn()
+  @MinDate(() => new Date(), {
+    message: 'Sale end date must not be in the past.',
+  })
   saleEndDate: Date;
 
   @Column({ type: 'integer', default: 0 })
-  @Check('capacity >= 0')
+  @IsInt()
+  @Min(0)
   capacity: number;
 
   @Column({ type: 'integer', default: 0 })
-  @Check('sold >= 0')
+  @IsInt()
+  @Min(0)
   sold: number;
 
   @Column({
@@ -52,6 +70,7 @@ export class TicketType extends AbstractEntity {
   salesStrategy: SalesStrategyEnum;
 
   @Column({ type: 'boolean', default: false, nullable: false })
+  @IsBoolean()
   allowWaitList: boolean;
 
   @ManyToOne(() => Event, (event) => event.ticketTypes, { nullable: false })
@@ -67,45 +86,32 @@ export class TicketType extends AbstractEntity {
   pricingPhases: TicketPricingPhase[];
 
   @Column({ nullable: true })
-  @Check(
-    'valid_for_days IS NULL OR valid_for_days > 0 or valid_for_days < 1000'
-  )
+  @Min(1)
+  @Max(730)
   validForDays: number;
 
   @Column({ type: 'boolean', default: true, nullable: false })
+  @IsBoolean()
   isPublishable: boolean;
 
   @Column({ type: 'boolean', default: true, nullable: false })
+  @IsBoolean()
   isActive: boolean;
 
   @Column({ type: 'int', default: 10 })
-  @Check('max_per_customer > 0 AND max_per_customer <= capacity')
+  @Min(1)
   maxPerCustomer: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
   private _currentPrice: number | null;
 
-  get currentPrice(): number | null {
-    return this._currentPrice;
-  }
-
   @AfterLoad()
   calculateCurrentPrice() {
-    const now = new Date();
-    if (now > this.saleEndDate) {
-      this._currentPrice = null;
-      return;
-    }
+    this._currentPrice = this.getCurrentPrice();
+  }
 
-    if (!this.pricingPhases || this.pricingPhases.length === 0) {
-      this._currentPrice = null;
-      return;
-    }
-
-    const activePhase = this.pricingPhases
-      .filter((phase) => phase.effectiveDate <= now)
-      .sort((a, b) => b.effectiveDate.getTime() - a.effectiveDate.getTime())[0];
-    this._currentPrice = activePhase ? activePhase.price : null;
+  get currentPrice(): number | null {
+    return this.getCurrentPrice();
   }
 
   @BeforeInsert()
@@ -113,50 +119,76 @@ export class TicketType extends AbstractEntity {
   async validateDates() {
     const now = new Date();
 
-    if (this.isActive) {
-      if (now.getTime() > this.saleEndDate.getTime()) {
-        throw new Error('Cannot set ticket end date to be in the past');
-      }
-      if (now.getTime() < this.saleStartDate.getTime()) {
-        throw new Error(
-          `Cannot set ticket to active before current time/date. Now: ${now} and ticket: ${this.saleStartDate}`
-        );
-      }
+    if (isAfter(now, this.saleEndDate) || isAfter(now, this.saleStartDate)) {
+      throw new BadRequestException(
+        `Sale dates cannot be in the past. now: ${now}, startDate: ${this.saleStartDate}`
+      );
+    }
+
+    if (isAfter(this.saleStartDate, this.saleEndDate)) {
+      throw new BadRequestException(
+        'Sale start date must be before sale end date.'
+      );
     }
     if (this.event) {
       if (
-        this.saleStartDate > this.event.end_date_time &&
-        this.saleEndDate > this.event.end_date_time
+        isAfter(this.saleStartDate, this.event.endDateTime) ||
+        isAfter(this.saleEndDate, this.event.endDateTime)
       ) {
-        throw new Error('Ticket sale dates must be within the event dates');
+        throw new BadRequestException(
+          'Ticket sale dates must be within event dates.'
+        );
       }
+    }
+  }
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  async validateFields() {
+    if (this.capacity < this.sold) {
+      throw new BadRequestException(
+        'Capacity cannot be less than sold tickets.'
+      );
+    }
+    if (this.maxPerCustomer >= this.capacity) {
+      throw new BadRequestException(
+        'Max tickets per customer cannot exceed capacity.'
+      );
     }
   }
 
   canBeActive(currentDate: Date): boolean {
-    return currentDate >= this.saleStartDate && currentDate <= this.saleEndDate;
+    return (
+      (isAfter(currentDate, this.saleStartDate) ||
+        isEqual(currentDate, this.saleStartDate)) &&
+      (isBefore(currentDate, this.saleEndDate) ||
+        isEqual(currentDate, this.saleEndDate))
+    );
   }
 
-  async getCurrentPrice(): Promise<number | null | string> {
-    //TODO: Temporary fix to my db being 1 h behind, i will have to find a way to use the timestamp better
-    // const now = new Date(new Date().getTime() + 60 * 60 * 1000);
-
+  getCurrentPrice(): number | null {
     const now = new Date(); // Current UTC timestamp
-    if (now < this.saleStartDate) {
-      return 'Tickets coming soon';
+
+    if (isBefore(now, this.saleStartDate)) {
+      //  'Tickets coming soon';
+      return null;
     }
 
-    if (now > this.saleEndDate) {
-      return 'Tickets sale ended';
+    if (isAfter(now, this.saleEndDate)) {
+      //  'Tickets sale ended';
+      return null;
     }
 
     if (!this.pricingPhases || this.pricingPhases.length === 0) {
-      return 'No pricing information available';
+      // 'No pricing information available';
+      return null;
     }
 
     const currentPhase = this.pricingPhases
       .filter((phase) => phase.effectiveDate <= now)
       .sort((a, b) => b.effectiveDate.getTime() - a.effectiveDate.getTime())[0];
-    return currentPhase ? currentPhase.price : 'No active pricing phase found';
+
+    // 'No active pricing phase found'
+    return currentPhase ? currentPhase.price : null;
   }
 }
