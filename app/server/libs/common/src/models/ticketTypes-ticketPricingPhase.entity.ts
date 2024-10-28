@@ -7,7 +7,13 @@ import {
   BeforeInsert,
 } from 'typeorm';
 import { AbstractEntity, TicketType } from '@app/common';
-import { ValidateIf, IsNotEmpty, MinDate, Min } from 'class-validator';
+import {
+  ValidateIf,
+  IsNotEmpty,
+  MinDate,
+  Min,
+  IsNumber,
+} from 'class-validator';
 import { TicketCategoryEnum } from './enums/ticket-entity-enums';
 import { TimestampColumn } from '../entityValidators/timestampColumn.validator';
 import { isBefore, isAfter, isEqual } from 'date-fns';
@@ -16,7 +22,6 @@ import { Expose } from 'class-transformer';
 
 @Entity()
 @Index(['ticketType', 'effectiveDate', 'phaseCategory'], { unique: true })
-// @Check(`"effective_date" >= CURRENT_DATE`) TODO: Find a way to replace this with an virtual method
 export class TicketPricingPhase extends AbstractEntity {
   @TimestampColumn()
   @MinDate(() => new Date(), {
@@ -25,13 +30,17 @@ export class TicketPricingPhase extends AbstractEntity {
   effectiveDate: Date;
 
   @Column('decimal', { precision: 10, scale: 2 })
+  @IsNumber(
+    { maxDecimalPlaces: 2 },
+    { message: 'Price must be a valid number with up to two decimal places.' }
+  )
   @Min(0, { message: 'Price must be a non-negative value.' })
   price: number;
 
   @Column({ type: 'enum', enum: TicketCategoryEnum, nullable: false })
   phaseCategory: TicketCategoryEnum;
 
-  @Column({ nullable: true, length: 255 })
+  @Column({ nullable: true, length: 255, default: null })
   @ValidateIf((o) => o.phaseCategory === TicketCategoryEnum.CUSTOM)
   @IsNotEmpty({ message: 'Phase name is required for custom pricing strategy' })
   customPhaseName?: string;
@@ -64,11 +73,13 @@ export class TicketPricingPhase extends AbstractEntity {
   validateEffectiveDate() {
     if (this.ticketType) {
       const { saleStartDate, saleEndDate } = this.ticketType;
+
       if (!saleStartDate || !saleEndDate) {
         throw new BadRequestException(
           'Ticket type must have both sale start date and sale end date defined.'
         );
       }
+
       if (
         isBefore(this.effectiveDate, saleStartDate) ||
         isAfter(this.effectiveDate, saleEndDate)
