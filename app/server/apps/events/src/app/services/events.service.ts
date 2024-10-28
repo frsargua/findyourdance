@@ -57,6 +57,7 @@ export class EventsService {
 
     const event = this.eventRepository.create({
       ...createEventDto,
+      ticketsRequired,
       eventAddress: address,
       user: user.id,
     });
@@ -95,7 +96,26 @@ export class EventsService {
   async getSingleEvent(id: string, options?: EnableEventOptionsDto) {
     this.logger.log('getSingleEvent: Fetching event', { eventId: id, options });
     const relations = this.getRelationsFromOptions(options);
-    return await this.eventRepository.findOneById(id, relations);
+
+    const eventDb = await this.eventRepository.findOneById(id, relations);
+
+    if (!eventDb) {
+      this.logger.warn('getSingleEvent: Event not found', { eventId: id });
+      throw new NotFoundException('Event not found');
+    }
+
+    return eventDb;
+  }
+
+  async getEventCheapestTicket(id: string, options?: EnableEventOptionsDto) {
+    this.logger.log('getEventCheapestTicket: Fetching event', {
+      eventId: id,
+      options,
+    });
+    const relations = this.getRelationsFromOptions(options);
+    const event = await this.eventRepository.findOneById(id, relations);
+    const cheapest = await event?.getCurrentCheapestTicketPrice();
+    return { price: cheapest };
   }
 
   async getUserEvents(user: User, options?: EnableEventOptionsDto) {
