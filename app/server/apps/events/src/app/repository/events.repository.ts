@@ -41,8 +41,8 @@ export class EventRepository extends BaseAbstractRepository<Event> {
       longitude,
       latitude,
       radius,
-      start_date_time,
-      end_date_time,
+      startDateTime,
+      endDateTime,
       max_price,
       min_price,
     } = searchEventsDto;
@@ -62,15 +62,15 @@ export class EventRepository extends BaseAbstractRepository<Event> {
           { longitude, latitude, distance }
         );
 
-      if (start_date_time) {
-        query.andWhere('event.start_date_time >= :start_date_time', {
-          start_date_time,
+      if (startDateTime) {
+        query.andWhere('event.start_date_time >= :startDateTime', {
+          startDateTime,
         });
       }
 
-      if (end_date_time) {
-        query.andWhere('event.end_date_time <= :end_date_time', {
-          end_date_time,
+      if (endDateTime) {
+        query.andWhere('event.end_date_time <= :endDateTime', {
+          endDateTime,
         });
       }
 
