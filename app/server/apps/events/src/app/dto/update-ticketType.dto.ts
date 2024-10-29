@@ -80,6 +80,10 @@ export class UpdateTicketTypeDto {
   isActive?: boolean;
 
   @IsOptional()
+  @IsBoolean()
+  isPublishable?: boolean;
+
+  @IsOptional()
   @IsInt()
   @Min(1)
   maxPerCustomer?: number;

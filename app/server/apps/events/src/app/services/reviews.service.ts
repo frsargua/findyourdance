@@ -1,44 +1,86 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { ImageService } from './image.service';
 import { CreateReviewDto } from '../dto/create-review.dto';
-import { EventsReviewsRepository } from '../repository/event-reviews.repository';
+import { EventReviewRepository } from '../repository/event-review.repository';
 import { EventsService } from './events.service';
 import { User } from '@app/common';
 import { UpdateReviewPublishStatusDto } from '../dto/update-review-publish-status.dto';
 import { IdParamDto } from '../dto/uuid-param.dto.ts';
+import { Logger } from 'nestjs-pino';
 
 @Injectable()
 export class EventsReviewService {
   constructor(
-    private readonly reviewRepository: EventsReviewsRepository,
+    private readonly eventReviewRepository: EventReviewRepository,
     private readonly imageService: ImageService,
-    private readonly eventService: EventsService
-  ) {}
+    private readonly eventService: EventsService,
+    private readonly logger: Logger
+  ) {
+    this.logger.log('EventsReviewService initialized');
+  }
 
   async create(createReviewDto: CreateReviewDto, user: any) {
+    this.logger.log('create: Creating new review', {
+      dto: createReviewDto,
+      userId: user.id,
+    });
+
     const { event: eventId, ...reviewData } = createReviewDto;
 
-    // Ensure the event exists
     const event = await this.eventService.getSingleEvent(eventId);
+
     if (!event) {
-      throw new Error('Event not found');
+      this.logger.warn('create: Event not found', { eventId });
+      throw new NotFoundException('Event not found');
     }
 
-    const review = this.reviewRepository.create({
+    const review = this.eventReviewRepository.create({
       ...reviewData,
       reviewer: user.id,
       event, // Associate the review with the event
     });
 
-    return this.reviewRepository.save(review);
+    try {
+      const savedReview = await this.eventReviewRepository.save(review);
+
+      this.logger.log('create: Review created successfully', {
+        reviewId: savedReview.id,
+      });
+
+      return savedReview;
+    } catch (error) {
+      this.logger.error('create: Failed to save review', {
+        error: error.message,
+        dto: createReviewDto,
+      });
+
+      throw new InternalServerErrorException('Failed to create review');
+    }
   }
 
   async getSingleEvent(reviewIdDto: IdParamDto, currentUser: User) {
-    return await this.validateEventOwnership(reviewIdDto.id, currentUser.id);
+    this.logger.log('getSingleEvent: Fetching single event review', {
+      reviewId: reviewIdDto.id,
+      userId: currentUser.id,
+    });
+
+    return await this.fetchAndValidateReviewOwnership(
+      reviewIdDto.id,
+      currentUser.id
+    );
   }
 
   async getUserEventsReviews(user: User) {
-    return await this.reviewRepository.findAll({
+    this.logger.log('getUserEventsReviews: Fetching user event reviews', {
+      userId: user.id,
+    });
+
+    return await this.eventReviewRepository.findAll({
       where: { reviewer: user.id },
     });
   }
@@ -49,32 +91,73 @@ export class EventsReviewService {
   ) {
     const { id: reviewNewId, published: reviewNewStatus } = updateReviewDto;
 
-    const reviewToUpdate = await this.validateEventOwnership(
+    this.logger.log(
+      'switchEventReviewPublishedStatus: Updating review published status',
+      { reviewId: reviewNewId, newStatus: reviewNewStatus }
+    );
+
+    const reviewToUpdate = await this.fetchAndValidateReviewOwnership(
       reviewNewId,
       user.id
     );
 
-    if (reviewToUpdate.published === reviewNewStatus) {
-      console.error(`The publish status is already: ${reviewNewStatus}`);
-      return reviewToUpdate;
-    }
-
     reviewToUpdate.published = reviewNewStatus;
+    try {
+      const updatedReview =
+        await this.eventReviewRepository.save(reviewToUpdate);
 
-    return await this.reviewRepository.save(reviewToUpdate);
+      this.logger.log(
+        'switchEventReviewPublishedStatus: Review status updated successfully',
+        { reviewId: updatedReview.id, newStatus: updatedReview.published }
+      );
+
+      return updatedReview;
+    } catch (error) {
+      this.logger.error(
+        'switchEventReviewPublishedStatus: Failed to update review status',
+        { error: error.message, reviewId: reviewNewId }
+      );
+
+      throw new InternalServerErrorException('Failed to create review');
+    }
   }
 
-  private async validateEventOwnership(reviewId: string, userId: string) {
+  private async fetchAndValidateReviewOwnership(
+    reviewId: string,
+    userId: string
+  ) {
+    this.logger.log('validateReviewOwnership: Validating review ownership', {
+      reviewId,
+      userId,
+    });
+
     try {
-      return await this.reviewRepository.findByCondition({
+      const review = await this.eventReviewRepository.findOne({
         where: {
           id: reviewId,
           reviewer: userId,
         },
       });
+
+      if (!review) {
+        this.logger.warn(
+          'validateReviewOwnership: Review not found or user not authorized',
+          { reviewId, userId }
+        );
+
+        throw new ForbiddenException(
+          "User doesn't have credentials or review doesn't exist"
+        );
+      }
+
+      return review;
     } catch (error) {
-      throw new ForbiddenException(
-        'Not allowed to update event, not review owner'
+      this.logger.error(
+        'validateReviewOwnership: Error validating review ownership',
+        { error: error.message, reviewId, userId }
+      );
+      throw new InternalServerErrorException(
+        'Error while validating review ownership'
       );
     }
   }

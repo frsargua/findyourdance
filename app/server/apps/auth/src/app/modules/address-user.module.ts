@@ -3,7 +3,7 @@ import { Module } from '@nestjs/common';
 import { AddressUser, DatabaseModule, LoggerModule } from '@app/common';
 import { AddressUserService } from '../services/address-user.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AddressUsersRepository } from '../repository/address-user.repository';
+import { AddressUserRepository } from '../repository/address-user.repository';
 
 @Module({
   imports: [
@@ -12,7 +12,7 @@ import { AddressUsersRepository } from '../repository/address-user.repository';
     TypeOrmModule.forFeature([AddressUser]),
   ],
   // controllers: [AddressUserController],
-  providers: [AddressUserService, AddressUsersRepository],
-  exports: [AddressUserService, AddressUsersRepository],
+  providers: [AddressUserService, AddressUserRepository],
+  exports: [AddressUserService, AddressUserRepository],
 })
 export class AddressModule {}

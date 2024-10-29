@@ -1,17 +1,18 @@
-import { BaseAbstractRepostitory, Event } from '@app/common';
-import { Injectable, Logger } from '@nestjs/common';
+import { BaseAbstractRepository, Event } from '@app/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, Repository } from 'typeorm';
 import { SearchEventsDto } from '../dto/search-events.dto';
+import { Logger } from 'nestjs-pino';
 
 @Injectable()
-export class EventsRepository extends BaseAbstractRepostitory<Event> {
-  protected logger: Logger = new Logger(EventsRepository.name);
+export class EventRepository extends BaseAbstractRepository<Event> {
   constructor(
     @InjectRepository(Event)
-    private readonly eventsRepository: Repository<Event>
+    private readonly eventRepository: Repository<Event>,
+    protected logger: Logger
   ) {
-    super(eventsRepository);
+    super(logger, eventRepository);
   }
 
   public async deleteAllEventsByUserId(userId: string): Promise<DeleteResult> {
@@ -19,7 +20,7 @@ export class EventsRepository extends BaseAbstractRepostitory<Event> {
     const deleteResults = await entity
       .createQueryBuilder()
       .delete()
-      .where('userId = :userId', { userId })
+      .where('user = :userId', { userId })
       .execute()
       .catch((error) => {
         this.logger.error(
@@ -33,7 +34,6 @@ export class EventsRepository extends BaseAbstractRepostitory<Event> {
 
     return deleteResults;
   }
-
   async findEventsWithinRadius(
     searchEventsDto: SearchEventsDto
   ): Promise<Event[]> {
@@ -41,48 +41,55 @@ export class EventsRepository extends BaseAbstractRepostitory<Event> {
       longitude,
       latitude,
       radius,
-      start_date_time,
-      end_date_time,
+      startDateTime,
+      endDateTime,
       max_price,
       min_price,
     } = searchEventsDto;
 
-    const distance = radius * 1000;
+    const distance = radius * 1000; // Assuming radius is in kilometers
 
-    const entity = await this.getEntity();
-    const query = entity
-      .createQueryBuilder('event')
-      .leftJoinAndSelect('event.eventAddress', 'events')
-      .where(
-        `ST_DWithin(
-        events.location::geography,
-        ST_MakePoint(:longitude, :latitude)::geography,
-        :distance
-      )`,
-        { longitude, latitude, distance }
-      );
+    try {
+      const query = this.eventRepository
+        .createQueryBuilder('event')
+        .leftJoinAndSelect('event.eventAddress', 'address')
+        .where(
+          `ST_DWithin(
+            address.location::geography,
+            ST_MakePoint(:longitude, :latitude)::geography,
+            :distance
+          )`,
+          { longitude, latitude, distance }
+        );
 
-    if (start_date_time) {
-      query.andWhere('event.start_date_time >= :start_date_time', {
-        start_date_time,
+      if (startDateTime) {
+        query.andWhere('event.start_date_time >= :startDateTime', {
+          startDateTime,
+        });
+      }
+
+      if (endDateTime) {
+        query.andWhere('event.end_date_time <= :endDateTime', {
+          endDateTime,
+        });
+      }
+
+      if (min_price !== undefined) {
+        query.andWhere('event.price >= :min_price', { min_price });
+      }
+
+      if (max_price !== undefined) {
+        query.andWhere('event.price <= :max_price', { max_price });
+      }
+
+      const events = await query.getMany();
+      return events;
+    } catch (error) {
+      this.logger.error('Failed to find events within radius', {
+        error,
+        searchParams: searchEventsDto,
       });
+      throw new InternalServerErrorException('Failed to find events.');
     }
-
-    if (end_date_time) {
-      query.andWhere('event.end_date_time <= :end_date_time', {
-        end_date_time,
-      });
-    }
-
-    if (typeof min_price !== 'undefined') {
-      query.andWhere('event.price >= :min_price', { min_price });
-    }
-
-    if (typeof max_price !== 'undefined') {
-      query.andWhere('event.price <= :max_price', { max_price });
-    }
-
-    const events = await query.getMany();
-    return events;
   }
 }

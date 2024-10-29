@@ -3,32 +3,47 @@ import {
   Index,
   Column,
   ManyToOne,
-  Check,
   BeforeUpdate,
   BeforeInsert,
-  AfterLoad,
 } from 'typeorm';
 import { AbstractEntity, TicketType } from '@app/common';
-import { ValidateIf, IsNotEmpty } from 'class-validator';
+import {
+  ValidateIf,
+  IsNotEmpty,
+  MinDate,
+  Min,
+  IsNumber,
+} from 'class-validator';
 import { TicketCategoryEnum } from './enums/ticket-entity-enums';
 import { TimestampColumn } from '../entityValidators/timestampColumn.validator';
+import { isBefore, isAfter, isEqual } from 'date-fns';
+import { BadRequestException } from '@nestjs/common';
+import { Expose } from 'class-transformer';
 
 @Entity()
 @Index(['ticketType', 'effectiveDate', 'phaseCategory'], { unique: true })
-// @Check(`"effective_date" >= CURRENT_DATE`) TODO: Find a way to replace this with an virtual method
-@Check(
-  `("phase_category" <> '${TicketCategoryEnum.CUSTOM}' OR "custom_phase_name" IS NOT NULL)`
-)
 export class TicketPricingPhase extends AbstractEntity {
   @TimestampColumn()
+  @MinDate(() => new Date(), {
+    message: 'Effective date must not be in the past.',
+  })
   effectiveDate: Date;
 
   @Column('decimal', { precision: 10, scale: 2 })
-  @Check('price >= 0')
+  @IsNumber(
+    { maxDecimalPlaces: 2 },
+    { message: 'Price must be a valid number with up to two decimal places.' }
+  )
+  @Min(0, { message: 'Price must be a non-negative value.' })
   price: number;
 
   @Column({ type: 'enum', enum: TicketCategoryEnum, nullable: false })
   phaseCategory: TicketCategoryEnum;
+
+  @Column({ nullable: true, length: 255, default: null })
+  @ValidateIf((o) => o.phaseCategory === TicketCategoryEnum.CUSTOM)
+  @IsNotEmpty({ message: 'Phase name is required for custom pricing strategy' })
+  customPhaseName?: string;
 
   @ManyToOne(() => TicketType, (ticketType) => ticketType.pricingPhases, {
     nullable: false,
@@ -37,45 +52,50 @@ export class TicketPricingPhase extends AbstractEntity {
   })
   ticketType: TicketType;
 
-  @Column({ nullable: true, length: 255 })
-  @ValidateIf((o) => o.phaseCategory === TicketCategoryEnum.CUSTOM)
-  @IsNotEmpty({ message: 'Phase name is required for custom pricing strategy' })
-  customPhaseName?: string;
-
-  private _isActive: boolean | null = null;
-
-  @AfterLoad()
-  computeIsActive() {
-    const now = new Date();
-    if (this.ticketType && this.ticketType.saleEndDate) {
-      this._isActive =
-        this.effectiveDate <= now && now <= this.ticketType.saleEndDate;
-    } else {
-      this._isActive = null;
-    }
-  }
-
+  @Expose()
   get isActive(): boolean {
     const now = new Date();
-    return this.effectiveDate <= now && now < this.ticketType.saleEndDate;
+
+    if (!this.ticketType?.saleStartDate || !this.ticketType?.saleEndDate) {
+      return false;
+    }
+
+    return (
+      (isBefore(this.effectiveDate, now) || isEqual(this.effectiveDate, now)) &&
+      isBefore(now, this.ticketType.saleEndDate) &&
+      (isAfter(now, this.ticketType.saleStartDate) ||
+        isEqual(now, this.ticketType.saleStartDate))
+    );
   }
 
   @BeforeInsert()
   @BeforeUpdate()
-  async validateEffectiveDate() {
+  validateEffectiveDate() {
     if (this.ticketType) {
-      if (this.effectiveDate >= this.ticketType.saleEndDate) {
-        throw new Error(
-          'Pricing phase effective date must be within the ticket type sale dates'
+      const { saleStartDate, saleEndDate } = this.ticketType;
+
+      if (!saleStartDate || !saleEndDate) {
+        throw new BadRequestException(
+          'Ticket type must have both sale start date and sale end date defined.'
+        );
+      }
+
+      if (
+        isBefore(this.effectiveDate, saleStartDate) ||
+        isAfter(this.effectiveDate, saleEndDate)
+      ) {
+        throw new BadRequestException(
+          'Effective date must be within the ticket type sale start and end dates.'
         );
       }
     }
   }
 
-  @AfterLoad()
-  setCustomPhaseName() {
-    if (this.phaseCategory !== TicketCategoryEnum.CUSTOM) {
-      this.customPhaseName = this.phaseCategory;
+  @Expose()
+  get displayPhaseName(): string {
+    if (this.phaseCategory === TicketCategoryEnum.CUSTOM) {
+      return this.customPhaseName || '';
     }
+    return this.phaseCategory.toString();
   }
 }

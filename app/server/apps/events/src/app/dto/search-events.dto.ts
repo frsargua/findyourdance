@@ -10,12 +10,12 @@ export class SearchEventsDto extends CoordinatesDto {
   @IsDate()
   // @IsFutureDate()
   @IsOptional()
-  start_date_time: Date;
+  startDateTime: Date;
 
   @IsDate()
   @IsOptional()
   @IsFutureDate()
-  end_date_time: Date;
+  endDateTime: Date;
 
   @IsNumber()
   @IsOptional()

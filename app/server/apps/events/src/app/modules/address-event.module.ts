@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 // import { AddressUserController } from '../controllers/address-user.controller';
 import { EventAddress, DatabaseModule, LoggerModule } from '@app/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AddressEventRepository } from '../repository/address-event.repository';
+import { EventAddressRepository } from '../repository/event-address.repository';
 import { AddressEventService } from '../services/address-event.service';
 
 @Module({
@@ -12,7 +12,7 @@ import { AddressEventService } from '../services/address-event.service';
     TypeOrmModule.forFeature([EventAddress]),
   ],
   // controllers: [AddressUserController],
-  providers: [AddressEventService, AddressEventRepository],
-  exports: [AddressEventService, AddressEventRepository],
+  providers: [AddressEventService, EventAddressRepository],
+  exports: [AddressEventService, EventAddressRepository],
 })
 export class AddressModule {}

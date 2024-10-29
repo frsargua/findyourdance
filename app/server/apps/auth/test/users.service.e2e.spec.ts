@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from '../src/app/services/users.service';
 import { CreateUserDto } from '../src/app/dto/create-user.dt';
-import { UsersRepository } from '../src/app/repository/users.repository';
+import { UserRepository } from '../src/app/repository/user.repository';
 import * as bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 import { User } from '@app/common';
@@ -23,7 +23,7 @@ describe('UsersService', () => {
       providers: [
         UsersService,
         {
-          provide: UsersRepository,
+          provide: UserRepository,
           useValue: mockUserRepository,
         },
       ],

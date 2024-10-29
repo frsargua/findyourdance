@@ -1,15 +1,17 @@
-import { AddressUser, BaseAbstractRepostitory } from '@app/common';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Logger } from 'nestjs-pino';
 import { Repository } from 'typeorm';
 
+import { AddressUser, BaseAbstractRepository } from '@app/common';
+
 @Injectable()
-export class AddressUsersRepository extends BaseAbstractRepostitory<AddressUser> {
-  protected logger: Logger = new Logger(AddressUsersRepository.name);
+export class AddressUserRepository extends BaseAbstractRepository<AddressUser> {
   constructor(
+    protected readonly logger: Logger,
     @InjectRepository(AddressUser)
-    private readonly addressUserRepository: Repository<AddressUser>
+    private addressUserRepository: Repository<AddressUser>
   ) {
-    super(addressUserRepository);
+    super(logger, addressUserRepository);
   }
 }

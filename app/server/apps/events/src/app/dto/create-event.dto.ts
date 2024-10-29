@@ -17,13 +17,13 @@ export class CreateEventDto {
   @IsAlphanumeric()
   @IsNotEmpty()
   @Length(1, 100)
-  event_name: string;
+  eventName: string;
 
   @IsDateString()
-  start_date_time: string;
+  startDateTime: string;
 
   @IsDateString()
-  end_date_time: string;
+  endDateTime: string;
 
   @IsAlphanumeric()
   description: string;
@@ -41,7 +41,7 @@ export class CreateEventDto {
   ticketTypes: CreateTicketTypeDto[] = [];
 
   @IsBoolean()
-  ticketsRequired: boolean = false;
+  ticketsRequired: boolean;
 
   @IsBoolean()
   ageRestriction: boolean;

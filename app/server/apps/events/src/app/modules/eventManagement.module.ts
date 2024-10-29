@@ -3,12 +3,13 @@ import {
   TicketPricingPhase,
   Event,
   AUTH_SERVICE,
+  LoggerModule,
 } from '@app/common';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { EventsRepository } from '../repository/events.repository';
-import { TicketsRepository } from '../repository/tickets.repository';
-import { TicketsPhasesRepository } from '../repository/ticketsPhases.repository';
+import { EventRepository } from '../repository/events.repository';
+import { TicketTypeRepository } from '../repository/ticket-type.repository';
+import { TicketPricingPhaseRepository } from '../repository/ticket-pricing-phase.repository';
 import { EventsService } from '../services/events.service';
 import { TicketsService } from '../services/tickets.service';
 import { TicketPhasesService } from '../services/ticketsPhases.service';
@@ -21,6 +22,7 @@ import { ConfigService } from '@nestjs/config';
   imports: [
     AddressModule,
     ImageModule,
+    LoggerModule,
     TypeOrmModule.forFeature([Event, TicketType, TicketPricingPhase]),
     ClientsModule.registerAsync([
       {
@@ -38,19 +40,19 @@ import { ConfigService } from '@nestjs/config';
   ],
   providers: [
     EventsService,
-    EventsRepository,
+    EventRepository,
     TicketsService,
-    TicketsRepository,
+    TicketTypeRepository,
     TicketPhasesService,
-    TicketsPhasesRepository,
+    TicketPricingPhaseRepository,
   ],
   exports: [
     EventsService,
-    EventsRepository,
+    EventRepository,
     TicketsService,
-    TicketsRepository,
+    TicketTypeRepository,
     TicketPhasesService,
-    TicketsPhasesRepository,
+    TicketPricingPhaseRepository,
     AddressModule,
     ImageModule,
     ClientsModule,

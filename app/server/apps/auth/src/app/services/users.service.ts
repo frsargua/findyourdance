@@ -1,63 +1,154 @@
 import {
+  ConflictException,
   Injectable,
+  InternalServerErrorException,
+  NotFoundException,
   UnauthorizedException,
-  UnprocessableEntityException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { CreateUserDto } from '../dto/create-user.dt';
-import { UsersRepository } from '../repository/users.repository';
+import { UserRepository } from '../repository/user.repository';
 import { GetUserDto } from '../dto/get-user.dto';
 import { AddressUserService } from './address-user.service';
 import { GenericAddressDto } from '../dto/create-address.dto';
 import { User } from '@app/common';
+import { Logger } from 'nestjs-pino';
 
 @Injectable()
 export class UsersService {
   constructor(
-    private readonly usersRepository: UsersRepository,
-    private readonly addressService: AddressUserService
+    private readonly userRepository: UserRepository,
+    private readonly addressService: AddressUserService,
+    protected logger: Logger
   ) {}
 
   async create(createUserDto: CreateUserDto) {
-    await this.validateCreateUserDto(createUserDto);
-    const user = this.usersRepository.create({
-      ...createUserDto,
-      password: await bcrypt.hash(createUserDto.password, 10),
+    this.logger.log('create: Attempting to create new user', {
+      email: createUserDto.email,
     });
 
-    return this.usersRepository.save(user);
+    await this.validateCreateUserDto(createUserDto);
+
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 12);
+    this.logger.debug('create: Password hashed successfully');
+
+    try {
+      const user = this.userRepository.create({
+        ...createUserDto,
+        password: hashedPassword,
+      });
+
+      const savedUser = await this.userRepository.save(user);
+      this.logger.log('create: User created successfully', {
+        userId: savedUser.id,
+      });
+      return savedUser;
+    } catch (error) {
+      this.logger.error('create: Failed to create user', {
+        email: createUserDto.email,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+
+      throw new InternalServerErrorException(
+        'An error occurred while creating the user'
+      );
+    }
   }
 
   private async validateCreateUserDto(createUserDto: CreateUserDto) {
-    try {
-      await this.usersRepository.findOne({
-        where: { email: createUserDto.email },
+    this.logger.debug(
+      'validateCreateUserDto: Checking if email already exists',
+      { email: createUserDto.email }
+    );
+
+    const existingUser = await this.userRepository.findOne({
+      where: { email: createUserDto.email },
+    });
+    if (existingUser) {
+      this.logger.warn('validateCreateUserDto: Email already exists', {
+        email: createUserDto.email,
       });
-    } catch (err) {
-      return;
+      throw new ConflictException('Email already exists');
+    } else {
+      this.logger.debug('validateCreateUserDto: Email is unique');
     }
-    throw new UnprocessableEntityException('Email already exits');
   }
 
   async updateUserAddress(user: User, userAddress: GenericAddressDto) {
-    const address = await this.addressService.createAddress(userAddress);
-    const userFromDb = await this.usersRepository.findOneById(user.id);
-    userFromDb.userAddress = address;
-    return await this.usersRepository.save(userFromDb);
+    this.logger.log('updateUserAddress: Attempting to update user address', {
+      userId: user.id,
+    });
+
+    try {
+      const address = await this.addressService.createAddress(userAddress);
+      this.logger.debug(
+        'updateUserAddress: Address created/fetched successfully'
+      );
+
+      const userFromDb = await this.userRepository.findOneById(user.id);
+      if (!userFromDb) {
+        this.logger.warn('updateUserAddress: User not found', {
+          userId: user.id,
+        });
+        throw new NotFoundException('User not found');
+      }
+
+      userFromDb.userAddress = address;
+      const updatedUser = await this.userRepository.save(userFromDb);
+      this.logger.log('updateUserAddress: User address updated successfully', {
+        userId: updatedUser.id,
+      });
+
+      return updatedUser;
+    } catch (error) {
+      this.logger.error('updateUserAddress: Failed to update user address', {
+        userId: user.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      if (error instanceof NotFoundException) {
+        throw error; // Re-throw NotFoundException
+      }
+      throw new InternalServerErrorException(
+        'An error occurred while updating the user address'
+      );
+    }
   }
 
-  async verifyUser(email: string, password: string) {
-    const user = await this.usersRepository.findOne({ where: { email } });
+  async verifyUser(email: string, password: string): Promise<User> {
+    this.logger.log('verifyUser: Attempting to verify user');
+
+    const user = await this.userRepository.findOne({ where: { email } });
+
+    if (!user) {
+      this.logger.warn('verifyUser: Invalid credentials');
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
     const passwordIsValid = await bcrypt.compare(password, user.password);
 
     if (!passwordIsValid) {
-      throw new UnauthorizedException('Credentials are not valid');
+      this.logger.warn('verifyUser: Invalid credentials');
+      throw new UnauthorizedException('Invalid credentials');
     }
 
+    this.logger.log('verifyUser: User verified successfully', {
+      userId: user.id,
+    });
     return user;
   }
 
   async getUser(getUserDto: GetUserDto) {
-    return this.usersRepository.findOneById(getUserDto.id);
+    this.logger.log('getUser: Attempting to fetch user', {
+      userId: getUserDto.id,
+    });
+
+    const user = await this.userRepository.findOneById(getUserDto.id);
+
+    if (!user) {
+      this.logger.warn('getUser: User not found', { userId: getUserDto.id });
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
   }
 }

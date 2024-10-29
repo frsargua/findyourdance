@@ -6,10 +6,14 @@ services:
       POSTGRES_DB: findyourdance
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Fabian123!
+      TZ: Europe/London
+      PGTZ: Europe/London
     ports:
       - '6543:5432'
     volumes:
       - ./healthcheck.sh:/usr/local/bin/healthcheck.sh
+      # - /etc/timezone:/etc/timezone:ro
+      # - /etc/localtime:/etc/localtime:ro
     healthcheck:
       test:
         [
@@ -27,6 +31,9 @@ services:
       dockerfile: ./apps/auth/Dockerfile
       target: development
     command: pnpm run start:dev auth
+    environment:
+      TZ: Europe/London
+      NODE_TZ: Europe/London
     env_file:
       - ./apps/auth/.env
     ports:
@@ -34,6 +41,8 @@ services:
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
+      # - /etc/timezone:/etc/timezone:ro
+      # - /etc/localtime:/etc/localtime:ro
     depends_on:
       postgres-database:
         condition: service_healthy
@@ -44,6 +53,9 @@ services:
       dockerfile: ./apps/qr-code-generator/Dockerfile
       target: development
     command: pnpm run start:dev qr-code-generator
+    environment:
+      TZ: Europe/London
+      PGTZ: Europe/London
     env_file:
       - ./apps/qr-code-generator/.env
     ports:
@@ -51,6 +63,8 @@ services:
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
+      # - /etc/timezone:/etc/timezone:ro
+      # - /etc/localtime:/etc/localtime:ro
     depends_on:
       postgres-database:
         condition: service_healthy
@@ -61,6 +75,9 @@ services:
       dockerfile: ./apps/address.api/Dockerfile
       target: development
     command: pnpm run start:dev address.api
+    environment:
+      TZ: Europe/London
+      NODE_TZ: Europe/London
     env_file:
       - ./apps/address.api/.env
     ports:
@@ -68,6 +85,8 @@ services:
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
+      # - /etc/timezone:/etc/timezone:ro
+      # - /etc/localtime:/etc/localtime:ro
     depends_on:
       postgres-database:
         condition: service_healthy
@@ -78,6 +97,9 @@ services:
       dockerfile: ./apps/events/Dockerfile
       target: development
     command: pnpm run start:dev events
+    environment:
+      TZ: Europe/London
+      NODE_TZ: Europe/London
     env_file:
       - ./apps/events/.env
     ports:
@@ -85,6 +107,8 @@ services:
     volumes:
       - .:/usr/src/app
       - /usr/src/app/node_modules
+      # - /etc/timezone:/etc/timezone:ro
+      # - /etc/localtime:/etc/localtime:ro
     depends_on:
       postgres-database:
         condition: service_healthy

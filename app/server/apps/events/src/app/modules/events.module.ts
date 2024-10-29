@@ -5,6 +5,7 @@ import {
   DatabaseModule,
   Event,
   EventReview,
+  LoggerModule,
   ReviewMedia,
   TicketPricingPhase,
   TicketType,
@@ -18,7 +19,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ImageModule } from './image.module';
 import { ImageService } from '../services/image.service';
 import { EventsReviewService } from '../services/reviews.service';
-import { EventsReviewsRepository } from '../repository/event-reviews.repository';
+import { EventReviewRepository } from '../repository/event-review.repository';
 import { EventManagement } from './eventManagement.module';
 
 @Module({
@@ -26,6 +27,7 @@ import { EventManagement } from './eventManagement.module';
     DatabaseModule,
     EventManagement,
     ImageModule,
+    LoggerModule,
     TypeOrmModule.forFeature([
       Event,
       TicketType,
@@ -42,6 +44,7 @@ import { EventManagement } from './eventManagement.module';
         AUTH_PORT: Joi.number().required(),
         AWS_ACCESS_KEY_ID: Joi.string().required(),
         AWS_SECRET_ACCESS_KEY: Joi.string().required(),
+        AWS_BUCKET_NAME: Joi.string().required(),
         AWS_REGION: Joi.string().required(),
       }),
     }),
@@ -62,7 +65,7 @@ import { EventManagement } from './eventManagement.module';
   controllers: [EventsController],
   providers: [
     EventsReviewService,
-    EventsReviewsRepository,
+    EventReviewRepository,
     ImageService,
     AddressEventService,
   ],
