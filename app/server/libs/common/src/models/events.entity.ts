@@ -29,19 +29,26 @@ export class Event extends AbstractEntity {
 
   @ManyToOne(() => EventAddress, (address) => address.events, {
     nullable: false,
+    onDelete: 'RESTRICT',
   })
   eventAddress: EventAddress;
 
-  @OneToMany(() => EventsImages, (image) => image.event, { nullable: true })
+  @OneToMany(() => EventsImages, (image) => image.event, {
+    nullable: true,
+    cascade: true,
+    onDelete: 'CASCADE',
+  })
   images: EventsImages[];
 
   @OneToMany(() => TicketType, (ticketType) => ticketType.event, {
     cascade: true,
+    onDelete: 'CASCADE',
   })
   ticketTypes: TicketType[];
 
   @OneToMany(() => EventReview, (review) => review.event, {
     cascade: true,
+    onDelete: 'CASCADE',
   })
   reviews: EventReview[];
 

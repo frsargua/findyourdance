@@ -73,7 +73,10 @@ export class TicketType extends AbstractEntity {
   @IsBoolean()
   allowWaitList: boolean;
 
-  @ManyToOne(() => Event, (event) => event.ticketTypes, { nullable: false })
+  @ManyToOne(() => Event, (event) => event.ticketTypes, {
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
   event: Event;
 
   @OneToMany(

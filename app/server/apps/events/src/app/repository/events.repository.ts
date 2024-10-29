@@ -20,7 +20,7 @@ export class EventRepository extends BaseAbstractRepository<Event> {
     const deleteResults = await entity
       .createQueryBuilder()
       .delete()
-      .where('userId = :userId', { userId })
+      .where('user = :userId', { userId })
       .execute()
       .catch((error) => {
         this.logger.error(
