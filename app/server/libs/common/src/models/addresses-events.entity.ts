@@ -4,6 +4,6 @@ import { GenericAddress } from './generic-address.entity';
 
 @Entity()
 export class EventAddress extends GenericAddress {
-  @OneToMany(() => Event, (event) => event.eventAddress) // Adding reverse relationship
+  @OneToMany(() => Event, (event) => event.eventAddress)
   events: Event[];
 }
