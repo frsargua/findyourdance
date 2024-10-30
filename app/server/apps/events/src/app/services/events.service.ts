@@ -175,8 +175,8 @@ export class EventsService {
 
     if (
       eventAddress &&
-      eventToUpdate.eventAddress.uniqueDeliveryPointRef !==
-        eventAddress.uniqueDeliveryPointRef
+      eventToUpdate.eventAddress.uniqueDeliveryPointReference !==
+        eventAddress.uniqueDeliveryPointReference
     ) {
       this.logger.log('updateSingleEvent: Updating event address', {
         eventId: id,

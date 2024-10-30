@@ -34,7 +34,7 @@ export class CreateAddressDto {
 
   @IsOptional()
   @IsString()
-  uniqueDeliveryPointRef: string;
+  uniqueDeliveryPointReference: string;
 
   @IsNotEmpty()
   @IsString()
