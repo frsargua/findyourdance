@@ -1,6 +1,6 @@
-import { Column, Entity, ManyToOne } from 'typeorm';
+import { Column, Entity, Index, ManyToOne } from 'typeorm';
 import { Event } from './events.entity';
-import { BaseImages } from './base-images.entity';
+import { BaseImage } from './base-images.entity';
 
 enum ImageType {
   MainImage = 'mainImage',
@@ -9,7 +9,8 @@ enum ImageType {
 }
 
 @Entity()
-export class EventsImages extends BaseImages {
+@Index(['event'])
+export class EventsImages extends BaseImage {
   @Column({
     type: 'enum',
     default: ImageType.General,
@@ -17,6 +18,9 @@ export class EventsImages extends BaseImages {
   })
   imageType: ImageType;
 
-  @ManyToOne(() => Event, (event) => event.images)
+  @ManyToOne(() => Event, (event) => event.images, {
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
   event: Event;
 }

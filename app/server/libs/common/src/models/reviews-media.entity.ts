@@ -1,23 +1,13 @@
-import { Column, Entity, ManyToOne } from 'typeorm';
-import { Event } from './events.entity';
-import { BaseImages } from './base-images.entity';
+import { Entity, Index, ManyToOne } from 'typeorm';
+import { BaseImage } from './base-images.entity';
 import { EventReview } from './events-reviews.entity';
 
-enum ImageType {
-  MainImage = 'mainImage',
-  Banner = 'banner',
-  General = 'general',
-}
-
 @Entity()
-export class ReviewMedia extends BaseImages {
-  @Column({
-    type: 'enum',
-    default: ImageType.General,
-    enum: ImageType,
+@Index(['review'])
+export class ReviewMedia extends BaseImage {
+  @ManyToOne(() => EventReview, (review) => review.media, {
+    nullable: false,
+    onDelete: 'CASCADE',
   })
-  imageType: ImageType;
-
-  @ManyToOne(() => Event, (event) => event.images)
   review: EventReview;
 }
