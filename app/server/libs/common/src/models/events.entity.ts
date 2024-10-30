@@ -6,7 +6,7 @@ import {
   TicketType,
 } from '@app/common';
 import { TimestampColumn } from '../entityValidators/timestampColumn.validator';
-import { IsBoolean, IsNotEmpty, MaxLength } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsUUID, MaxLength } from 'class-validator';
 import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 
 @Entity()
@@ -54,12 +54,13 @@ export class Event extends AbstractEntity {
 
   @Column()
   @IsNotEmpty()
+  @IsUUID('4', { message: 'Reviewer must be a valid UUID.' })
   user: string;
 
-  @Column({ type: 'boolean', default: false, nullable: false })
+  @Column({ type: 'boolean', default: false })
   ageRestriction: boolean;
 
-  @Column()
+  @Column({ type: 'boolean', default: false })
   @IsBoolean()
   published: boolean;
 

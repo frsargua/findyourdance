@@ -34,7 +34,7 @@ export class GenericAddressDto {
 
   @IsOptional()
   @IsString()
-  uniqueDeliveryPointRef: string;
+  uniqueDeliveryPointReference: string;
 
   @IsNotEmpty()
   @IsString()

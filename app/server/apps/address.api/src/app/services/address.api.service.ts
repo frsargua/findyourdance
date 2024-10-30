@@ -99,7 +99,7 @@ export class AddressApiService {
       street: response.thoroughfare,
       town: response.post_town,
       county: response.county,
-      uniqueDeliveryPointRef: response.udprn,
+      uniqueDeliveryPointReference: response.udprn,
       fullAddress: response.address,
       postCode: response.postcode_compact,
       latitude: response?.geocode?.lattitude ?? '',

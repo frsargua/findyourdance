@@ -16,18 +16,18 @@ export class AddressUserService {
   ) {}
 
   async createAddress(addressDto: GenericAddressDto): Promise<AddressUser> {
-    const { uniqueDeliveryPointRef } = addressDto;
+    const { uniqueDeliveryPointReference } = addressDto;
 
-    if (!uniqueDeliveryPointRef) {
+    if (!uniqueDeliveryPointReference) {
       this.logger.error('UniqueDeliveryPointRef is missing');
       throw new BadRequestException('UniqueDeliveryPointRef is required');
     }
 
     this.logger.log('Attempting to create or fetch address', {
-      uniqueDeliveryPointRef,
+      uniqueDeliveryPointReference,
     });
 
-    const existingAddress = await this.getAddress(uniqueDeliveryPointRef);
+    const existingAddress = await this.getAddress(uniqueDeliveryPointReference);
 
     if (existingAddress) {
       this.logger.log('Address already exists, returning from database', {
@@ -46,7 +46,7 @@ export class AddressUserService {
       this.logger.error('Failed to save new address', {
         error: error.message,
         stack: error.stack,
-        uniqueDeliveryPointRef,
+        uniqueDeliveryPointReference,
       });
 
       throw new InternalServerErrorException('Failed to save new address', {
@@ -56,20 +56,20 @@ export class AddressUserService {
   }
 
   async getAddress(
-    uniqueDeliveryPointRef: string
+    uniqueDeliveryPointReference: string
   ): Promise<AddressUser | null> {
-    if (!uniqueDeliveryPointRef) {
+    if (!uniqueDeliveryPointReference) {
       this.logger.error('UniqueDeliveryPointRef is missing');
       throw new BadRequestException('UniqueDeliveryPointRef is required');
     }
 
     this.logger.log('Fetching address from database', {
-      uniqueDeliveryPointRef,
+      uniqueDeliveryPointReference,
     });
 
     try {
       const address = await this.addressRepository.findOne({
-        where: { uniqueDeliveryPointRef },
+        where: { uniqueDeliveryPointReference },
       });
 
       if (address) {
@@ -78,7 +78,7 @@ export class AddressUserService {
         });
       } else {
         this.logger.warn('Address not found', {
-          uniqueDeliveryPointRef,
+          uniqueDeliveryPointReference,
         });
       }
 
@@ -87,7 +87,7 @@ export class AddressUserService {
       this.logger.error('Failed to retrieve address', {
         error: error.message,
         stack: error.stack,
-        uniqueDeliveryPointRef,
+        uniqueDeliveryPointReference,
       });
       throw new InternalServerErrorException('Failed to retrieve address');
     }
