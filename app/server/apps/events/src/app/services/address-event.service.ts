@@ -41,59 +41,39 @@ export class AddressEventService {
     });
 
     this.logger.log('createAddress: Saving new address', { newAddress });
+
     const savedAddress = await this.eventAddressRepository.save(newAddress);
-    await this.eventAddressRepository.updateLocation(
-      savedAddress.id,
-      latitude,
-      longitude
-    );
 
-    //TODO: Use virtual methods instead?
-    this.logger.log(
-      'createAddress: Updating location coordinates for new address',
-      {
-        addressId: savedAddress.id,
-        latitude,
-        longitude,
-      }
-    );
-    const updatedAddress = await this.eventAddressRepository.findOne({
-      where: { id: savedAddress.id },
-    });
-
-    if (!updatedAddress) {
+    if (!savedAddress) {
       this.logger.error('createAddress: Updated address not found', {
-        addressId: savedAddress.id,
+        addressId: newAddress.id,
       });
       throw new NotFoundException('temporary fix for not found address.');
     }
 
-    const newSavedAddress =
-      await this.eventAddressRepository.save(updatedAddress);
-
     this.logger.log('createAddress: Successfully created new address', {
-      newSavedAddress,
+      newAddress,
     });
-    return newSavedAddress;
+    return newAddress;
   }
 
   async getAddress(addressDto: CreateAddressDto) {
-    const { uniqueDeliveryPointRef } = addressDto;
+    const { uniqueDeliveryPointReference } = addressDto;
 
     this.logger.log('getAddress: Attempting to fetch address', {
-      uniqueDeliveryPointRef,
+      uniqueDeliveryPointReference,
     });
 
     try {
       const address = await this.eventAddressRepository.findOne({
         where: {
-          uniqueDeliveryPointRef: uniqueDeliveryPointRef,
+          uniqueDeliveryPointReference: uniqueDeliveryPointReference,
         },
       });
 
       if (!address) {
         this.logger.warn('getAddress: Address not found', {
-          uniqueDeliveryPointRef,
+          uniqueDeliveryPointReference,
         });
       } else {
         this.logger.log('getAddress: Address found', { address });
@@ -104,7 +84,7 @@ export class AddressEventService {
       this.logger.error('getAddress: Error retrieving address', {
         error: error.message,
         stack: error.stack,
-        uniqueDeliveryPointRef,
+        uniqueDeliveryPointReference,
       });
       throw new InternalServerErrorException('Failed to retrieve address');
     }
